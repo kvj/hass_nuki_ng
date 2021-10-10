@@ -1,0 +1,20 @@
+{
+    "title": "Nuki NG",
+    "config": {
+      "step": {
+        "user": {
+          "title": "New Nuki device",
+          "data": {
+            "name": "Device name",
+            "address": "Bridge hostname or IP address",
+            "token": "Bridge Api token",
+            "web_token": "Web Api token (optional)"
+          }
+        }
+      },
+      "error": {
+        "bridge_error": "Bridge error"
+      }
+    }
+  }
+  
