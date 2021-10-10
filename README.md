@@ -9,5 +9,5 @@
 ### Installation:
 * Checkout/clone the contents of this repo to `~.homeassistant/custom_components/nuki_ng/`
 * Restart your Home Assistant
-* Add new integration (search for `Nuki NG` in the list)
+* Add new integration (search for `Nuki Lock` in the list)
 * Input bridge API token (mandatory) and web API token (optional, if you have it enabled)

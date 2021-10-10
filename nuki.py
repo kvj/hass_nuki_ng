@@ -2,6 +2,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.helpers.network import get_url
 from homeassistant.components import webhook
 
 import requests
@@ -155,7 +156,8 @@ class NukiCoordinator(DataUpdateCoordinator):
 
         hook_id = "%s_%s" % (BRIDGE_HOOK, entry.entry_id)
 
-        self.bridge_hook = webhook.async_generate_url(hass, hook_id)
+        url = get_url(hass)
+        self.bridge_hook = "{}{}".format(url, webhook.async_generate_path(hook_id))
         webhook.async_unregister(hass, hook_id)
         webhook.async_register(
             hass,
