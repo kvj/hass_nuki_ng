@@ -5,15 +5,29 @@
       "user": {
         "title": "New Nuki device",
         "data": {
-          "name": "Device name",
-          "address": "Bridge hostname or IP address",
+          "name": "Entry name (optional)",
+          "address": "Nuki bridge hostname or IP address",
           "token": "Bridge Api token",
-          "web_token": "Web Api token (optional)"
+          "web_token": "Web Api token (optional)",
+          "hass_url": "Home Assistant internal URL"
         }
       }
     },
     "error": {
-      "bridge_error": "Bridge error"
+      "bridge_error": "Error communicating with Nuki bridge"
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "title": "Configure Nuki device",
+        "data": {
+          "token": "Bridge Api token",
+          "web_token": "Web Api token (optional)",
+          "hass_url": "Home Assistant internal URL"
+        }
+      }
     }
   }
 }
+  
