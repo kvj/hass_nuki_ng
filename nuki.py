@@ -156,7 +156,7 @@ class NukiCoordinator(DataUpdateCoordinator):
 
         hook_id = "%s_%s" % (BRIDGE_HOOK, entry.entry_id)
 
-        url = get_url(hass)
+        url = config.get("hass_url", get_url(hass))
         self.bridge_hook = "{}{}".format(url, webhook.async_generate_path(hook_id))
         webhook.async_unregister(hass, hook_id)
         webhook.async_register(
@@ -181,7 +181,12 @@ class NukiCoordinator(DataUpdateCoordinator):
 
     async def _update(self):
         try:
-            callback_result = await self.api.bridge_check_callback(self.bridge_hook)
+            callback_updated = False
+            try:
+                await self.api.bridge_check_callback(self.bridge_hook)
+                callback_updated = True
+            except Exception:
+                _LOGGER.exception(f"Failed to update callback {self.bridge_hook}")
             latest = await self.api.bridge_list()
             info = await self.api.bridge_info()
             previous = self.data if self.data else {}
@@ -195,6 +200,7 @@ class NukiCoordinator(DataUpdateCoordinator):
             for dev_id in all_ids:
                 prev_web_auth = previous.get(dev_id, {}).get("web_auth", {})
                 previous[dev_id] = mapped.get(dev_id, previous.get(dev_id))
+                previous[dev_id]["callback_updated"] = callback_updated
                 try:
                     previous[dev_id]["web_auth"] = await self.api.web_list_all_auths(dev_id)
                 except ConnectionError:

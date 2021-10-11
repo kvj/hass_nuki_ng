@@ -21,6 +21,7 @@ async def async_setup_entry(
         entities.append(BatteryCharging(coordinator, dev_id))
         entities.append(LockState(coordinator, dev_id))
         entities.append(BridgeServerConnection(coordinator, dev_id))
+        entities.append(BridgeCallbackSet(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "keypadBatteryCritical"):
             entities.append(KeypadBatteryLow(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "ringactionState"):
@@ -120,4 +121,16 @@ class BridgeServerConnection(NukiEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return self.data.get("info", {}).get("serverConnected", False)
+
+class BridgeCallbackSet(NukiEntity, BinarySensorEntity):
+
+    def __init__(self, coordinator, device_id):
+        super().__init__(coordinator, device_id)
+        self.set_id("binary_sensor", "bridge_callback")
+        self.set_name("bridge callback set")
+        self._attr_device_class = "connectivity"
+
+    @property
+    def is_on(self) -> bool:
+        return self.data.get("callback_updated", False)
 
