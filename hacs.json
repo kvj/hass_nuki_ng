@@ -1,0 +1,5 @@
+{
+    "name": "Nuki Lock",
+    "domains": ["lock"],
+    "render_readme": true
+}
