@@ -31,11 +31,19 @@ class Battery(NukiEntity, SensorEntity):
         self.set_id("sensor", "battery")
         self.set_name("battery")
         self._attr_device_class = "battery"
+        self._attr_state_class = "measurement"
+
+    @property
+    def native_unit_of_measurement(self):
+        return "%"
+
+    @property
+    def native_value(self):
+        return self.last_state.get("batteryChargeState", 0)
 
     @property
     def state(self):
-        value = self.last_state.get("batteryChargeState", 0)
-        return f"{value}%"
+        return self.native_value
 
 class LockState(NukiEntity, SensorEntity):
 
