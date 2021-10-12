@@ -1,20 +1,15 @@
-from homeassistant.components.lock import (
-    LockEntity,
-    SUPPORT_OPEN
-)
+from homeassistant.components.lock import LockEntity, SUPPORT_OPEN
 
 import logging
 
 from . import NukiEntity
 from .constants import DOMAIN
+from .states import LockStates
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(
-    hass,
-    entry,
-    async_add_entities
-):
+
+async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     data = entry.as_dict()
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -24,12 +19,12 @@ async def async_setup_entry(
     async_add_entities(entities)
     return True
 
-class Lock(NukiEntity, LockEntity):
 
+class Lock(NukiEntity, LockEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("lock", "lock")
-        self.set_name("lock")
+        self.set_name("Lock")
 
     @property
     def supported_features(self):
@@ -41,19 +36,19 @@ class Lock(NukiEntity, LockEntity):
 
     @property
     def is_locked(self):
-        return self.lock_state == 1
+        return LockStates(self.lock_state) == LockStates.LOCKED
 
     @property
     def is_locking(self):
-        return self.lock_state == 4
+        return LockStates(self.lock_state) == LockStates.LOCKING
 
     @property
     def is_unlocking(self):
-        return self.lock_state == 2
+        return LockStates(self.lock_state) == LockStates.UNLOCKING
 
     @property
     def is_jammed(self):
-        return self.lock_state == 254
+        return LockStates(self.lock_state) == LockStates.MOTOR_BLOCKED
 
     async def async_lock(self, **kwargs):
         await self.coordinator.action(self.device_id, "lock")
