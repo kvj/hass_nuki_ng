@@ -24,7 +24,7 @@ class Lock(NukiEntity, LockEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("lock", "lock")
-        self.set_name("lock")
+        self.set_name("Lock")
 
     @property
     def supported_features(self):

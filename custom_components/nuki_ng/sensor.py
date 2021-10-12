@@ -28,7 +28,7 @@ class Battery(NukiEntity, SensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("sensor", "battery")
-        self.set_name("battery")
+        self.set_name("Battery")
         self._attr_device_class = "battery"
         self._attr_state_class = "measurement"
 
@@ -49,7 +49,7 @@ class LockState(NukiEntity, SensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("sensor", "state")
-        self.set_name("state")
+        self.set_name("State")
         self._attr_icon = "mdi:door"
 
     @property
@@ -61,7 +61,7 @@ class DoorSensorState(NukiEntity, SensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("sensor", "door_state")
-        self.set_name("door state")
+        self.set_name("Door State")
         self._attr_icon = "mdi:door-open"
 
     @property
@@ -73,7 +73,7 @@ class DoorSecurityState(NukiEntity, SensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("sensor", "door_security_state")
-        self.set_name("door security state")
+        self.set_name("Door Security State")
         self._attr_icon = "mdi:door-closed-lock"
 
     @property

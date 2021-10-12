@@ -31,9 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for p in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, p)
-        )
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, p))
     return True
 
 
@@ -76,10 +74,7 @@ class NukiEntity(CoordinatorEntity):
 
     @property
     def unique_id(self) -> str:
-        return "nuki-%s-%s" % (
-            self.device_id, 
-            self.id_suffix
-        )
+        return "nuki-%s-%s" % (self.device_id, self.id_suffix)
 
     @property
     def data(self) -> dict:
@@ -114,8 +109,8 @@ class NukiEntity(CoordinatorEntity):
             "sw_version": self.data.get("firmwareVersion"),
         }
 
-class NukiBridge(CoordinatorEntity):
 
+class NukiBridge(CoordinatorEntity):
     def set_id(self, suffix: str):
         self.id_suffix = suffix
 
@@ -128,10 +123,7 @@ class NukiBridge(CoordinatorEntity):
 
     @property
     def unique_id(self) -> str:
-        return "nuki-bridge-%s-%s" % (
-            self.get_id,
-            self.id_suffix
-        )
+        return "nuki-bridge-%s-%s" % (self.get_id, self.id_suffix)
 
     @property
     def data(self) -> dict:

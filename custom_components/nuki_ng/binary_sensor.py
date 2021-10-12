@@ -34,7 +34,7 @@ class BatteryLow(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "battery_low")
-        self.set_name("battery critical")
+        self.set_name("Battery Critical")
 
     @property
     def is_on(self) -> bool:
@@ -49,7 +49,7 @@ class BatteryCharging(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "battery_charging")
-        self.set_name("battery charging")
+        self.set_name("Battery Charging")
         self._attr_device_class = "battery_charging"
 
     @property
@@ -61,7 +61,7 @@ class KeypadBatteryLow(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "keypad_battery_low")
-        self.set_name("keypad battery critical")
+        self.set_name("Keypad Battery Critical")
 
     @property
     def is_on(self) -> bool:
@@ -76,7 +76,7 @@ class RingAction(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "ring_action")
-        self.set_name("ring action")
+        self.set_name("Ring Action")
 
     @property
     def is_on(self) -> bool:
@@ -87,7 +87,7 @@ class LockState(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "state")
-        self.set_name("locked")
+        self.set_name("Locked")
         self._attr_device_class = "lock"
 
     @property
@@ -100,7 +100,7 @@ class DoorState(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "door_state")
-        self.set_name("door open")
+        self.set_name("Door Open")
         self._attr_device_class = "door"
 
     @property
@@ -110,11 +110,10 @@ class DoorState(NukiEntity, BinarySensorEntity):
 
 
 class BridgeServerConnection(NukiBridge, BinarySensorEntity):
-
     def __init__(self, coordinator):
         super().__init__(coordinator)
         self.set_id("connected")
-        self.set_name("connected")
+        self.set_name("Connected")
         self._attr_device_class = "connectivity"
 
     @property
@@ -126,7 +125,7 @@ class BridgeCallbackSet(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "bridge_callback")
-        self.set_name("bridge callback set")
+        self.set_name("Bridge Callback Set")
         self._attr_device_class = "connectivity"
 
     @property
