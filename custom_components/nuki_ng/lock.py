@@ -63,11 +63,3 @@ class Lock(NukiEntity, LockEntity):
 
     async def async_open(self, **kwargs):
         await self.coordinator.action(self.device_id, "open")
-
-    @property
-    def extra_state_attributes(self):
-        info = self.data.get("info", {})
-        return {
-            "Firmware version": info.get("versions", {}).get("firmwareVersion"),
-            "Wifi firmware version": info.get("versions", {}).get("wifiFirmwareVersion"),
-        }

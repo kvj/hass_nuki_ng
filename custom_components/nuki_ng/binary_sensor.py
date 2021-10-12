@@ -2,7 +2,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 
 import logging
 
-from . import NukiEntity
+from . import NukiEntity, NukiBridge
 from .constants import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ async def async_setup_entry(
         entities.append(BatteryLow(coordinator, dev_id))
         entities.append(BatteryCharging(coordinator, dev_id))
         entities.append(LockState(coordinator, dev_id))
-        entities.append(BridgeServerConnection(coordinator, dev_id))
+        entities.append(BridgeServerConnection(coordinator))
         entities.append(BridgeCallbackSet(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "keypadBatteryCritical"):
             entities.append(KeypadBatteryLow(coordinator, dev_id))
@@ -110,17 +110,17 @@ class DoorState(NukiEntity, BinarySensorEntity):
         current = self.last_state.get("doorsensorState", 4)
         return current in {3}
 
-class BridgeServerConnection(NukiEntity, BinarySensorEntity):
+class BridgeServerConnection(NukiBridge, BinarySensorEntity):
 
-    def __init__(self, coordinator, device_id):
-        super().__init__(coordinator, device_id)
-        self.set_id("binary_sensor", "bridge_connected")
-        self.set_name("bridge connected")
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self.set_id("connected")
+        self.set_name("connected")
         self._attr_device_class = "connectivity"
 
     @property
     def is_on(self) -> bool:
-        return self.data.get("info", {}).get("serverConnected", False)
+        return self.data.get("serverConnected", False)
 
 class BridgeCallbackSet(NukiEntity, BinarySensorEntity):
 

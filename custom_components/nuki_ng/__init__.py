@@ -42,7 +42,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = dict()
     return True
 
-
 class NukiEntity(CoordinatorEntity):
     
     def __init__(self, coordinator, device_id: str):
@@ -98,4 +97,44 @@ class NukiEntity(CoordinatorEntity):
             "manufacturer": "Nuki",
             "model": self.model,
             "sw_version": self.data.get("firmwareVersion"),
+        }
+
+class NukiBridge(CoordinatorEntity):
+    
+    def set_id(self, suffix: str):
+        self.id_suffix = suffix
+
+    def set_name(self, name: str):
+        self.name_suffix = name
+
+    @property
+    def name(self) -> str:
+        return "Nuki Bridge %s" % (self.name_suffix)
+
+    @property
+    def unique_id(self) -> str:
+        return "nuki-bridge-%s-%s" % (
+            self.get_id, 
+            self.id_suffix
+        )
+
+    @property
+    def data(self) -> dict:
+        first = list(self.coordinator.data.keys())[0]
+        return self.coordinator.data.get(first, {}).get("info", {})
+
+    @property
+    def get_id(self):
+        return self.data.get("ids", {}).get("hardwareId")
+
+    @property
+    def device_info(self):
+        model = "Hardware Bridge" if self.data.get("bridgeType", 1) else "Software Bridge"
+        versions = self.data.get("versions", {})
+        return {
+            "identifiers": {("id", self.get_id)},
+            "name": "Nuki Bridge",
+            "manufacturer": "Nuki",
+            "model": model,
+            "sw_version": versions.get("firmwareVersion"),
         }
