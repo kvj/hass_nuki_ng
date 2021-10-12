@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 class NukiEntity(CoordinatorEntity):
-    
+
     def __init__(self, coordinator, device_id: str):
         super().__init__(coordinator)
         self.device_id = device_id
@@ -103,6 +103,10 @@ class NukiEntity(CoordinatorEntity):
             "manufacturer": "Nuki",
             "model": self.model,
             "sw_version": self.data.get("firmwareVersion"),
+            "via_device": (
+                "id", 
+                self.coordinator.info_data().get("ids", {}).get("hardwareId")
+            )
         }
 
 class NukiBridge(CoordinatorEntity):

@@ -235,6 +235,9 @@ class NukiCoordinator(DataUpdateCoordinator):
     def device_data(self, dev_id: str):
         return self.data.get("devices", {}).get(dev_id, {})
 
+    def info_data(self):
+        return self.data.get("info", {})
+
     def is_lock(self, dev_id: str) -> bool:
         return self.device_data(dev_id).get("deviceType") == 0
 
