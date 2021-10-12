@@ -24,7 +24,7 @@ async def async_setup_entry(
         entities.append(BridgeCallbackSet(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "keypadBatteryCritical"):
             entities.append(KeypadBatteryLow(coordinator, dev_id))
-        if coordinator.device_supports(dev_id, "ringactionState"):
+        if coordinator.is_opener(dev_id):
             entities.append(RingAction(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "doorsensorState"):
             entities.append(DoorState(coordinator, dev_id))

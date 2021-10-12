@@ -84,18 +84,10 @@ class NukiEntity(CoordinatorEntity):
         return self.coordinator.data.get(self.device_id, {}).get("lastKnownState", {})
 
     @property
-    def is_lock(self) -> bool:
-        return self.data.get("deviceType") == 0
-
-    @property
-    def is_opener(self) -> bool:
-        return self.data.get("deviceType") == 2
-
-    @property
     def model(self) -> str:
-        if self.is_lock:
+        if self.coordinator.is_lock(self.device_id):
             return "Nuki Smart Lock"
-        if self.is_opener:
+        if self.coordinator.is_opener(self.device_id):
             return "Nuki Opener"
 
     @property
