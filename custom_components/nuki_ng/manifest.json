@@ -1,8 +1,8 @@
 {
   "domain": "nuki_ng",
   "name": "Nuki Lock",
-  "documentation": "https://github.com/kvj/nuki_ng",
-  "issue_tracker": "https://github.com/kvj/nuki_ng/issues",
+  "documentation": "https://github.com/kvj/hass_nuki_ng",
+  "issue_tracker": "https://github.com/kvj/hass_nuki_ng/issues",
   "dependencies": [],
   "codeowners": ["@kvj"],
   "requirements": [],
