@@ -17,7 +17,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     for dev_id in coordinator.data.get("devices", {}):
-        for auth_id in coordinator.device_data("dev_id").get("web_auth", {}):
+        for auth_id in coordinator.device_data(dev_id).get("web_auth", {}):
             entities.append(AuthEntry(coordinator, dev_id, auth_id))
     async_add_entities(entities)
     return True
@@ -71,4 +71,13 @@ class AuthEntry(NukiEntity, SwitchEntity):
             "Remote allowed": self.auth_data.get("remoteAllowed"),
             "Lock count": self.auth_data.get("lockCount"),
             "Last active date": self.auth_data.get("lastActiveDate") 
+        }
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {("web_id", self.device_id)},
+            "name": "Nuki Web API",
+            "manufacturer": "Nuki",
+            "via_device": ("id", self.device_id)
         }
