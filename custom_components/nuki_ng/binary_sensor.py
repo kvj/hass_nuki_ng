@@ -4,14 +4,12 @@ import logging
 
 from . import NukiEntity
 from .constants import DOMAIN
+from .states import DoorSensorStates, LockStates
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(
-    hass,
-    entry,
-    async_add_entities
-):
+
+async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     data = entry.as_dict()
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -31,8 +29,8 @@ async def async_setup_entry(
     async_add_entities(entities)
     return True
 
-class BatteryLow(NukiEntity, BinarySensorEntity):
 
+class BatteryLow(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "battery_low")
@@ -46,8 +44,8 @@ class BatteryLow(NukiEntity, BinarySensorEntity):
     def device_class(self) -> str:
         return "battery"
 
-class BatteryCharging(NukiEntity, BinarySensorEntity):
 
+class BatteryCharging(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "battery_charging")
@@ -58,8 +56,8 @@ class BatteryCharging(NukiEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         return self.last_state.get("batteryCharging", False)
 
-class KeypadBatteryLow(NukiEntity, BinarySensorEntity):
 
+class KeypadBatteryLow(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "keypad_battery_low")
@@ -73,8 +71,8 @@ class KeypadBatteryLow(NukiEntity, BinarySensorEntity):
     def device_class(self) -> str:
         return "battery"
 
-class RingAction(NukiEntity, BinarySensorEntity):
 
+class RingAction(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "ring_action")
@@ -84,8 +82,8 @@ class RingAction(NukiEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         return self.last_state.get("ringactionState", False)
 
-class LockState(NukiEntity, BinarySensorEntity):
 
+class LockState(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "state")
@@ -94,11 +92,11 @@ class LockState(NukiEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        current = self.last_state.get("state", 255)
-        return current in {2, 3, 4, 5, 6, 7}
+        current = LockStates(self.last_state.get("state", LockStates.UNDEFINED.value))
+        return current == LockStates.LOCKED
+
 
 class DoorState(NukiEntity, BinarySensorEntity):
-
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "door_state")
@@ -107,11 +105,11 @@ class DoorState(NukiEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        current = self.last_state.get("doorsensorState", 4)
-        return current in {3}
+        current = DoorSensorStates(self.last_state.get("doorsensorState", DoorSensorStates.UNKNOWN.value))
+        return current == DoorSensorStates.DOOR_OPENED
+
 
 class BridgeServerConnection(NukiEntity, BinarySensorEntity):
-
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "bridge_connected")
@@ -122,8 +120,8 @@ class BridgeServerConnection(NukiEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         return self.data.get("info", {}).get("serverConnected", False)
 
-class BridgeCallbackSet(NukiEntity, BinarySensorEntity):
 
+class BridgeCallbackSet(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "bridge_callback")
@@ -133,4 +131,3 @@ class BridgeCallbackSet(NukiEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return self.data.get("callback_updated", False)
-
