@@ -90,7 +90,7 @@ class NukiEntity(CoordinatorEntity):
 
     @property
     def is_opener(self) -> bool:
-        return self.data.get("deviceType") == 1
+        return self.data.get("deviceType") == 2
 
     @property
     def model(self) -> str:
