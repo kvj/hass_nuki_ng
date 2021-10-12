@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
 # from homeassistant.helpers import device_registry
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -11,11 +12,15 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import logging
 
+OPENER_TYPE = 1
+LOCK_TYPE = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 from .constants import DOMAIN, PLATFORMS
 
 from .nuki import NukiCoordinator
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     data = entry.as_dict()["data"]
@@ -26,10 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for p in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, p)
-        )
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, p))
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     await hass.data[DOMAIN][entry.entry_id].unload()
@@ -38,9 +42,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = dict()
     return True
+
 
 class NukiEntity(CoordinatorEntity):
 
@@ -65,14 +71,11 @@ class NukiEntity(CoordinatorEntity):
 
     @property
     def name(self) -> str:
-        return "Nuki %s %s" % (self.get_name, self.name_suffix)
+        return "%s %s" % (self.get_name, self.name_suffix)
 
     @property
     def unique_id(self) -> str:
-        return "nuki-%s-%s" % (
-            self.device_id, 
-            self.id_suffix
-        )
+        return "nuki-%s-%s" % (self.device_id, self.id_suffix)
 
     @property
     def available(self):
@@ -87,6 +90,14 @@ class NukiEntity(CoordinatorEntity):
     @property
     def last_state(self) -> dict:
         return self.data.get("lastKnownState", {})
+
+    @property
+    def is_lock(self) -> bool:
+        return self.data.get("deviceType") == LOCK_TYPE
+
+    @property
+    def is_opener(self) -> bool:
+        return self.data.get("deviceType") == OPENER_TYPE
 
     @property
     def model(self) -> str:
@@ -109,8 +120,8 @@ class NukiEntity(CoordinatorEntity):
             )
         }
 
+
 class NukiBridge(CoordinatorEntity):
-    
     def set_id(self, suffix: str):
         self.id_suffix = suffix
 
@@ -123,10 +134,7 @@ class NukiBridge(CoordinatorEntity):
 
     @property
     def unique_id(self) -> str:
-        return "nuki-bridge-%s-%s" % (
-            self.get_id, 
-            self.id_suffix
-        )
+        return "nuki-bridge-%s-%s" % (self.get_id, self.id_suffix)
 
     @property
     def data(self) -> dict:
