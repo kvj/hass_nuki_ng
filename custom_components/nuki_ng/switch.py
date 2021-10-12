@@ -16,8 +16,8 @@ async def async_setup_entry(
     data = entry.as_dict()
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    for dev_id in coordinator.data:
-        for auth_id in coordinator.data[dev_id]["web_auth"]:
+    for dev_id in coordinator.data.get("devices", {}):
+        for auth_id in coordinator.device_data("dev_id").get("web_auth", {}):
             entities.append(AuthEntry(coordinator, dev_id, auth_id))
     async_add_entities(entities)
     return True

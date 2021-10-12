@@ -16,18 +16,18 @@ async def async_setup_entry(
     data = entry.as_dict()
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    for dev_id in coordinator.data:
+    for dev_id in coordinator.data.get("devices", {}):
         entities.append(BatteryLow(coordinator, dev_id))
         entities.append(BatteryCharging(coordinator, dev_id))
         entities.append(LockState(coordinator, dev_id))
-        entities.append(BridgeServerConnection(coordinator))
-        entities.append(BridgeCallbackSet(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "keypadBatteryCritical"):
             entities.append(KeypadBatteryLow(coordinator, dev_id))
         if coordinator.is_opener(dev_id):
             entities.append(RingAction(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "doorsensorState"):
             entities.append(DoorState(coordinator, dev_id))
+    entities.append(BridgeServerConnection(coordinator))
+    entities.append(BridgeCallbackSet(coordinator))
     async_add_entities(entities)
     return True
 
@@ -122,11 +122,11 @@ class BridgeServerConnection(NukiBridge, BinarySensorEntity):
     def is_on(self) -> bool:
         return self.data.get("serverConnected", False)
 
-class BridgeCallbackSet(NukiEntity, BinarySensorEntity):
+class BridgeCallbackSet(NukiBridge, BinarySensorEntity):
 
-    def __init__(self, coordinator, device_id):
-        super().__init__(coordinator, device_id)
-        self.set_id("binary_sensor", "bridge_callback")
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self.set_id("callback_set")
         self.set_name("bridge callback set")
         self._attr_device_class = "connectivity"
 

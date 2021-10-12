@@ -19,7 +19,7 @@ async def async_setup_entry(
     data = entry.as_dict()
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    for dev_id in coordinator.data:
+    for dev_id in coordinator.data.get("devices", {}):
         entities.append(Lock(coordinator, dev_id))
     async_add_entities(entities)
     return True

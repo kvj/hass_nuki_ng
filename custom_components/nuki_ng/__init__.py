@@ -75,12 +75,18 @@ class NukiEntity(CoordinatorEntity):
         )
 
     @property
+    def available(self):
+        if "nukiId" not in self.data:
+            return False
+        return super().available
+
+    @property
     def data(self) -> dict:
-        return self.coordinator.data.get(self.device_id, {})
+        return self.coordinator.device_data(self.device_id)
 
     @property
     def last_state(self) -> dict:
-        return self.coordinator.data.get(self.device_id, {}).get("lastKnownState", {})
+        return self.data.get("lastKnownState", {})
 
     @property
     def model(self) -> str:
@@ -120,8 +126,7 @@ class NukiBridge(CoordinatorEntity):
 
     @property
     def data(self) -> dict:
-        first = list(self.coordinator.data.keys())[0]
-        return self.coordinator.data.get(first, {}).get("info", {})
+        return self.coordinator.data.get("info", {})
 
     @property
     def get_id(self):

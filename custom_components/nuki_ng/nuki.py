@@ -168,8 +168,10 @@ class NukiCoordinator(DataUpdateCoordinator):
         )
 
     def _add_update(self, dev_id: str, update):
-        data = self.data if self.data else {}
-        previous = data.get(dev_id)
+        data = self.data
+        if not data:
+            return None
+        previous = data.get("devices", {}).get(dev_id)
         if not previous:
             return None
         last_state = previous.get("lastKnownState", {})
@@ -189,26 +191,17 @@ class NukiCoordinator(DataUpdateCoordinator):
                 _LOGGER.exception(f"Failed to update callback {self.bridge_hook}")
             latest = await self.api.bridge_list()
             info = await self.api.bridge_info()
-            previous = self.data if self.data else {}
-            all_ids = set()
-            mapped = dict()
+            info["callback_updated"] = callback_updated
+            result = dict(devices={}, info=info)
             for item in latest:
-                mapped[item["nukiId"]] = item
-                all_ids.add(item["nukiId"])
-            for item in previous:
-                all_ids.add(item)
-            for dev_id in all_ids:
-                prev_web_auth = previous.get(dev_id, {}).get("web_auth", {})
-                previous[dev_id] = mapped.get(dev_id, previous.get(dev_id))
-                previous[dev_id]["callback_updated"] = callback_updated
+                dev_id = item["nukiId"]
                 try:
-                    previous[dev_id]["web_auth"] = await self.api.web_list_all_auths(dev_id)
+                    item["web_auth"] = await self.api.web_list_all_auths(dev_id)
                 except ConnectionError:
                     _LOGGER.exception("Error while fetching auth:")
-                    previous[dev_id]["web_auth"] = prev_web_auth
-                previous[dev_id]["info"] = info
-            _LOGGER.debug(f"_update: {json.dumps(previous)}")
-            return previous
+                result["devices"][dev_id] = item
+            _LOGGER.debug(f"_update: {json.dumps(result)}")
+            return result
         except Exception as err:
             _LOGGER.exception(f"Failed to get latest data: {err}")
             raise UpdateFailed from err
@@ -239,14 +232,17 @@ class NukiCoordinator(DataUpdateCoordinator):
             await self.async_request_refresh()
         _LOGGER.debug(f"action result: {result}, {action}")
 
+    def device_data(self, dev_id: str):
+        return self.data.get("devices", {}).get(dev_id, {})
+
     def is_lock(self, dev_id: str) -> bool:
-        return self.data.get(dev_id, {}).get("deviceType") == 0
+        return self.device_data(dev_id).get("deviceType") == 0
 
     def is_opener(self, dev_id: str) -> bool:
-        return self.data.get(dev_id, {}).get("deviceType") == 2
+        return self.device_data(dev_id).get("deviceType") == 2
 
     def device_supports(self, dev_id: str, feature: str) -> bool:
-        return feature in self.data.get(dev_id, {}).get("lastKnownState", {})
+        return feature in self.device_data(dev_id).get("lastKnownState", {})
 
     async def update_web_auth(self, dev_id: str, auth: dict, changes: dict):
         if "id" not in auth:

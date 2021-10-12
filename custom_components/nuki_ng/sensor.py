@@ -16,7 +16,7 @@ async def async_setup_entry(
     data = entry.as_dict()
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    for dev_id in coordinator.data:
+    for dev_id in coordinator.data.get("devices", {}):
         entities.append(Battery(coordinator, dev_id))
         entities.append(LockState(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "doorsensorStateName"):
