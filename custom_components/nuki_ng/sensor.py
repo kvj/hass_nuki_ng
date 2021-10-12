@@ -63,7 +63,7 @@ class DoorSensorState(NukiEntity, SensorEntity):
         super().__init__(coordinator, device_id)
         self.set_id("sensor", "door_state")
         self.set_name("door state")
-        self._attr_icon = "mdi:door-open"
+        self._attr_icon = "mdi:door"
 
     @property
     def state(self):
