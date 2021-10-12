@@ -66,12 +66,11 @@ class NukiEntity(CoordinatorEntity):
 
     @property
     def name(self) -> str:
-        return "%s %s" % (self.get_name, self.name_suffix)
+        return "Nuki %s %s" % (self.get_name, self.name_suffix)
 
     @property
     def unique_id(self) -> str:
-        return "%s.nuki.%s.%s" % (
-            self.id_prefix, 
+        return "nuki-%s-%s" % (
             self.device_id, 
             self.id_suffix
         )
