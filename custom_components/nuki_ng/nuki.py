@@ -239,6 +239,12 @@ class NukiCoordinator(DataUpdateCoordinator):
             await self.async_request_refresh()
         _LOGGER.debug(f"action result: {result}, {action}")
 
+    def is_lock(self, dev_id: str) -> bool:
+        return self.data.get(dev_id, {}).get("deviceType") == 0
+
+    def is_opener(self, dev_id: str) -> bool:
+        return self.data.get(dev_id, {}).get("deviceType") == 2
+
     def device_supports(self, dev_id: str, feature: str) -> bool:
         return feature in self.data.get(dev_id, {}).get("lastKnownState", {})
 

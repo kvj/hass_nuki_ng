@@ -31,7 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for p in PLATFORMS:
-        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, p))
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, p)
+        )
     return True
 
 
@@ -74,7 +76,10 @@ class NukiEntity(CoordinatorEntity):
 
     @property
     def unique_id(self) -> str:
-        return "%s.nuki.%s.%s" % (self.id_prefix, self.device_id, self.id_suffix)
+        return "nuki-%s-%s" % (
+            self.device_id, 
+            self.id_suffix
+        )
 
     @property
     def data(self) -> dict:
@@ -94,9 +99,9 @@ class NukiEntity(CoordinatorEntity):
 
     @property
     def model(self) -> str:
-        if self.is_lock:
+        if self.coordinator.is_lock(self.device_id):
             return "Nuki Smart Lock"
-        if self.is_opener:
+        if self.coordinator.is_opener(self.device_id):
             return "Nuki Opener"
 
     @property
@@ -107,4 +112,44 @@ class NukiEntity(CoordinatorEntity):
             "manufacturer": "Nuki",
             "model": self.model,
             "sw_version": self.data.get("firmwareVersion"),
+        }
+
+class NukiBridge(CoordinatorEntity):
+
+    def set_id(self, suffix: str):
+        self.id_suffix = suffix
+
+    def set_name(self, name: str):
+        self.name_suffix = name
+
+    @property
+    def name(self) -> str:
+        return "Nuki Bridge %s" % (self.name_suffix)
+
+    @property
+    def unique_id(self) -> str:
+        return "nuki-bridge-%s-%s" % (
+            self.get_id,
+            self.id_suffix
+        )
+
+    @property
+    def data(self) -> dict:
+        first = list(self.coordinator.data.keys())[0]
+        return self.coordinator.data.get(first, {}).get("info", {})
+
+    @property
+    def get_id(self):
+        return self.data.get("ids", {}).get("hardwareId")
+
+    @property
+    def device_info(self):
+        model = "Hardware Bridge" if self.data.get("bridgeType", 1) else "Software Bridge"
+        versions = self.data.get("versions", {})
+        return {
+            "identifiers": {("id", self.get_id)},
+            "name": "Nuki Bridge",
+            "manufacturer": "Nuki",
+            "model": model,
+            "sw_version": versions.get("firmwareVersion"),
         }
