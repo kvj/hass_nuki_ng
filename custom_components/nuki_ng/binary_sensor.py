@@ -84,6 +84,12 @@ class RingAction(NukiEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         return self.last_state.get("ringactionState", False)
 
+    @property
+    def extra_state_attributes(self):
+        return {
+            "timestamp": self.last_state.get("ringactionTimestamp")
+        }
+
 class LockState(NukiEntity, BinarySensorEntity):
 
     def __init__(self, coordinator, device_id):
@@ -96,6 +102,12 @@ class LockState(NukiEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         current = self.last_state.get("state", 255)
         return current in {2, 3, 4, 5, 6, 7}
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "timestamp": self.last_state.get("timestamp")
+        }
 
 class DoorState(NukiEntity, BinarySensorEntity):
 
