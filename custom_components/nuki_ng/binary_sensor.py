@@ -89,8 +89,6 @@ class RingAction(NukiEntity, BinarySensorEntity):
         }
 
 class LockState(NukiEntity, BinarySensorEntity):
-
-class LockState(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("binary_sensor", "state")
@@ -107,8 +105,6 @@ class LockState(NukiEntity, BinarySensorEntity):
         return {
             "timestamp": self.last_state.get("timestamp")
         }
-
-class DoorState(NukiEntity, BinarySensorEntity):
 
 class DoorState(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
