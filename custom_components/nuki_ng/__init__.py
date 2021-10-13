@@ -1,4 +1,6 @@
 from __future__ import annotations
+from .nuki import NukiCoordinator
+from .constants import DOMAIN, PLATFORMS
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -17,10 +19,6 @@ LOCK_TYPE = 0
 
 _LOGGER = logging.getLogger(__name__)
 
-from .constants import DOMAIN, PLATFORMS
-
-from .nuki import NukiCoordinator
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     data = entry.as_dict()["data"]
@@ -31,7 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for p in PLATFORMS:
-        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, p))
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, p))
     return True
 
 
@@ -67,7 +66,7 @@ class NukiEntity(CoordinatorEntity):
 
     @property
     def get_name(self):
-        return self.data.get("name", self.device_id)
+        return "Nuki %s" % (self.data.get("name", self.device_id))
 
     @property
     def name(self) -> str:
@@ -107,7 +106,7 @@ class NukiEntity(CoordinatorEntity):
             "model": self.model,
             "sw_version": self.data.get("firmwareVersion"),
             "via_device": (
-                "id", 
+                "id",
                 self.coordinator.info_data().get("ids", {}).get("hardwareId")
             )
         }
@@ -138,7 +137,8 @@ class NukiBridge(CoordinatorEntity):
 
     @property
     def device_info(self):
-        model = "Hardware Bridge" if self.data.get("bridgeType", 1) else "Software Bridge"
+        model = "Hardware Bridge" if self.data.get(
+            "bridgeType", 1) else "Software Bridge"
         versions = self.data.get("versions", {})
         return {
             "identifiers": {("id", self.get_id)},
