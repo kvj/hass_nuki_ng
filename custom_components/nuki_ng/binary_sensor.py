@@ -88,6 +88,7 @@ class RingAction(NukiEntity, BinarySensorEntity):
             "timestamp": self.last_state.get("ringactionTimestamp")
         }
 
+
 class LockState(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
@@ -97,14 +98,16 @@ class LockState(NukiEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        current = LockStates(self.last_state.get("state", LockStates.UNDEFINED.value))
-        return current == LockStates.LOCKED
+        current = LockStates(self.last_state.get(
+            "state", LockStates.UNDEFINED.value))
+        return current != LockStates.LOCKED
 
     @property
     def extra_state_attributes(self):
         return {
             "timestamp": self.last_state.get("timestamp")
         }
+
 
 class DoorState(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
@@ -115,7 +118,8 @@ class DoorState(NukiEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        current = DoorSensorStates(self.last_state.get("doorsensorState", DoorSensorStates.UNKNOWN.value))
+        current = DoorSensorStates(self.last_state.get(
+            "doorsensorState", DoorSensorStates.UNKNOWN.value))
         return current == DoorSensorStates.DOOR_OPENED
 
 
@@ -129,6 +133,7 @@ class BridgeServerConnection(NukiBridge, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return self.data.get("serverConnected", False)
+
 
 class BridgeCallbackSet(NukiBridge, BinarySensorEntity):
 
