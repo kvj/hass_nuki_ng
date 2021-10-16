@@ -16,6 +16,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     for dev_id in coordinator.data.get("devices", {}):
         entities.append(LockState(coordinator, dev_id))
+        entities.append(RSSI(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "batteryChargeState"):
             entities.append(Battery(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "doorsensorStateName"):
@@ -56,6 +57,27 @@ class LockState(NukiEntity, SensorEntity):
     @property
     def state(self):
         return self.last_state.get("stateName")
+
+
+class RSSI(NukiEntity, SensorEntity):
+    def __init__(self, coordinator, device_id):
+        super().__init__(coordinator, device_id)
+        self.set_id("sensor", "rssi")
+        self.set_name("RSSI")
+        self._attr_device_class = "signal_strength"
+        self._attr_state_class = "measurement"
+
+    @property
+    def native_unit_of_measurement(self):
+        return "dBm"
+
+    @property
+    def native_value(self):
+        return self.data.get("bridgeInfo", {}).get("rssi")
+
+    @property
+    def state(self):
+        return self.native_value
 
 
 class DoorSensorState(NukiEntity, SensorEntity):

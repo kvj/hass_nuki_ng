@@ -135,6 +135,13 @@ class BridgeServerConnection(NukiBridge, BinarySensorEntity):
     def is_on(self) -> bool:
         return self.data.get("serverConnected", False)
 
+    @property
+    def extra_state_attributes(self):
+        versions = self.data.get("versions", {})
+        return {
+            "wifiFirmwareVersion": versions.get("wifiFirmwareVersion")
+        }
+
 
 class BridgeCallbackSet(NukiBridge, BinarySensorEntity):
 

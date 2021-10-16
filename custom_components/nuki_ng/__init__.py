@@ -147,3 +147,10 @@ class NukiBridge(CoordinatorEntity):
             "model": model,
             "sw_version": versions.get("firmwareVersion"),
         }
+
+    @property
+    def extra_state_attributes(self):
+        versions = self.data.get("versions", {})
+        return {
+            "wifiFirmwareVersion": versions.get("wifiFirmwareVersion")
+        }

@@ -18,12 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 BRIDGE_DISCOVERY_API = "https://api.nuki.io/discover/bridges"
 BRIDGE_HOOK = "nuki_ng_bridge_hook"
 
+
 class NukiInterface:
 
     def __init__(
-        self, 
-        hass, 
-        *, 
+        self,
+        hass,
+        *,
         bridge: str = None,
         token: str = None,
         web_token: str = None
@@ -54,7 +55,7 @@ class NukiInterface:
             _LOGGER.exception(f"Failed to discover bridge:", err)
         return None
 
-    def bridge_url(self, path: str, extra = None) -> str:
+    def bridge_url(self, path: str, extra=None) -> str:
         extra_str = "&%s" % (urlencode(extra)) if extra else ""
         return f"http://{self.bridge}:8080{path}?token={self.token}{extra_str}"
 
@@ -74,7 +75,7 @@ class NukiInterface:
         }
         return await self.async_json(
             lambda r: r.get(self.bridge_url(
-                "/lockAction", 
+                "/lockAction",
                 dict(action=actions_map[action], nukiId=dev_id)
             ))
         )
@@ -82,7 +83,7 @@ class NukiInterface:
     async def bridge_check_callback(self, callback: str, add: bool = True):
         callbacks = await self.async_json(
             lambda r: r.get(self.bridge_url("/callback/list")
-        ))
+                            ))
         _LOGGER.debug(f"bridge_check_callback: {callbacks}, {callback}")
         result = dict()
         for item in callbacks.get("callbacks", []):
@@ -94,20 +95,20 @@ class NukiInterface:
                         "/callback/remove",
                         {"id": item["id"]}
                     )
-                ))
+                    ))
         if add:
             result = await self.async_json(
                 lambda r: r.get(self.bridge_url(
-                    "/callback/add", 
+                    "/callback/add",
                     {"url": callback}
                 )
-            ))
+                ))
         if not result.get("success", True):
             raise ConnectionError(result.get("message"))
-    
+
     def web_url(self, path):
         return f"https://api.nuki.io{path}"
-    
+
     async def web_async_json(self, cb):
         return await self.async_json(lambda r: cb(r, {
             "authorization": f"Bearer {self.web_token}"
@@ -119,7 +120,7 @@ class NukiInterface:
             return result
         response = await self.web_async_json(
             lambda r, h: r.get(
-                self.web_url(f"/smartlock/{dev_id}/auth"), 
+                self.web_url(f"/smartlock/{dev_id}/auth"),
                 headers=h
             )
         )
@@ -130,20 +131,21 @@ class NukiInterface:
     async def web_update_auth(self, dev_id: str, auth_id: str, changes: dict):
         response = await self.web_async_json(
             lambda r, h: r.post(
-                self.web_url(f"/smartlock/{dev_id}/auth/{auth_id}"), 
+                self.web_url(f"/smartlock/{dev_id}/auth/{auth_id}"),
                 headers=h,
                 json=changes
             )
         )
+
 
 class NukiCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, entry, config: dict):
         self.entry = entry
         self.api = NukiInterface(
-            hass, 
-            bridge=config.get("address"), 
-            token=config.get("token"), 
+            hass,
+            bridge=config.get("address"),
+            token=config.get("token"),
             web_token=config.get("web_token")
         )
         super().__init__(
@@ -157,7 +159,8 @@ class NukiCoordinator(DataUpdateCoordinator):
         hook_id = "%s_%s" % (BRIDGE_HOOK, entry.entry_id)
 
         url = config.get("hass_url", get_url(hass))
-        self.bridge_hook = "{}{}".format(url, webhook.async_generate_path(hook_id))
+        self.bridge_hook = "{}{}".format(
+            url, webhook.async_generate_path(hook_id))
         webhook.async_unregister(hass, hook_id)
         webhook.async_register(
             hass,
@@ -188,9 +191,13 @@ class NukiCoordinator(DataUpdateCoordinator):
                 await self.api.bridge_check_callback(self.bridge_hook)
                 callback_updated = True
             except Exception:
-                _LOGGER.exception(f"Failed to update callback {self.bridge_hook}")
+                _LOGGER.exception(
+                    f"Failed to update callback {self.bridge_hook}")
             latest = await self.api.bridge_list()
             info = await self.api.bridge_info()
+            info_mapping = dict()
+            for item in info.get("scanResults", []):
+                info_mapping[item.get("nukiId")] = item
             info["callback_updated"] = callback_updated
             result = dict(devices={}, info=info)
             for item in latest:
@@ -200,6 +207,8 @@ class NukiCoordinator(DataUpdateCoordinator):
                 except ConnectionError:
                     _LOGGER.exception("Error while fetching auth:")
                 result["devices"][dev_id] = item
+                result["devices"][dev_id]["bridgeInfo"] = info_mapping.get(
+                    dev_id, {})
             _LOGGER.debug(f"_update: {json.dumps(result)}")
             return result
         except Exception as err:
@@ -253,5 +262,6 @@ class NukiCoordinator(DataUpdateCoordinator):
         await self.api.web_update_auth(dev_id, auth["id"], changes)
         data = self.data
         for key in changes:
-            data.get(dev_id, {}).get("web_auth", {}).get(auth["id"], {})[key] = changes[key]
+            data.get(dev_id, {}).get("web_auth", {}).get(
+                auth["id"], {})[key] = changes[key]
         self.async_set_updated_data(data)
