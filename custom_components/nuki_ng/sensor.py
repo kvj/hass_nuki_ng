@@ -15,8 +15,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     for dev_id in coordinator.data.get("devices", {}):
-        entities.append(Battery(coordinator, dev_id))
         entities.append(LockState(coordinator, dev_id))
+        if coordinator.device_supports(dev_id, "batteryChargeState"):
+            entities.append(Battery(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "doorsensorStateName"):
             entities.append(DoorSensorState(coordinator, dev_id))
             entities.append(DoorSecurityState(coordinator, dev_id))
@@ -93,7 +94,8 @@ class DoorSecurityState(NukiEntity, SensorEntity):
 
     def get_state(self) -> DoorSecurityStates:
         lock_state = LockStates(self.last_state.get("state"))
-        door_sensor_state = DoorSensorStates(self.last_state.get("doorsensorState"))
+        door_sensor_state = DoorSensorStates(
+            self.last_state.get("doorsensorState"))
 
         if lock_state == LockStates.LOCKED and door_sensor_state == DoorSensorStates.DOOR_CLOSED:
             return DoorSecurityStates.CLOSED_AND_LOCKED

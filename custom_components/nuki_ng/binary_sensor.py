@@ -16,7 +16,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     for dev_id in coordinator.data.get("devices", {}):
         entities.append(BatteryLow(coordinator, dev_id))
-        entities.append(BatteryCharging(coordinator, dev_id))
+        if coordinator.device_supports(dev_id, "batteryCharging"):
+            entities.append(BatteryCharging(coordinator, dev_id))
         entities.append(LockState(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "keypadBatteryCritical"):
             entities.append(KeypadBatteryLow(coordinator, dev_id))
