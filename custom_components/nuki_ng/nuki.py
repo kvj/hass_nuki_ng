@@ -65,6 +65,12 @@ class NukiInterface:
     async def bridge_info(self):
         return await self.async_json(lambda r: r.get(self.bridge_url("/info")))
 
+    async def bridge_reboot(self):
+        return await self.async_json(lambda r: r.get(self.bridge_url("/reboot")))
+
+    async def bridge_fwupdate(self):
+        return await self.async_json(lambda r: r.get(self.bridge_url("/fwupdate")))
+
     async def bridge_lock_action(self, dev_id: str, action: str):
         actions_map = {
             "unlock": 1,
@@ -240,6 +246,12 @@ class NukiCoordinator(DataUpdateCoordinator):
         if result.get("success"):
             await self.async_request_refresh()
         _LOGGER.debug(f"action result: {result}, {action}")
+
+    async def do_reboot(self):
+        await self.api.bridge_reboot()
+
+    async def do_fwupdate(self):
+        await self.api.bridge_fwupdate()
 
     def device_data(self, dev_id: str):
         return self.data.get("devices", {}).get(dev_id, {})

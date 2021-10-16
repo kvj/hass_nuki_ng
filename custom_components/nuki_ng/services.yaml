@@ -1,0 +1,11 @@
+bridge_reboot:
+  name: Reboot Bridge
+  target:
+    device:
+      integration: nuki_ng
+
+bridge_fwupdate:
+  name: Perform Bridge software update
+  target:
+    device:
+      integration: nuki_ng

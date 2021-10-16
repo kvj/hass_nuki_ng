@@ -3,15 +3,13 @@ from .nuki import NukiCoordinator
 from .constants import DOMAIN, PLATFORMS
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import service
 
 # from homeassistant.helpers import device_registry
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
 )
 
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 import logging
 
 OPENER_TYPE = 1
@@ -34,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry):
     await hass.data[DOMAIN][entry.entry_id].unload()
     for p in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(entry, p)
@@ -42,8 +40,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config) -> bool:
     hass.data[DOMAIN] = dict()
+
+    async def async_reboot(call):
+        for entry_id in await service.async_extract_config_entry_ids(hass, call):
+            await hass.data[DOMAIN][entry_id].do_reboot()
+
+    async def async_fwupdate(call):
+        for entry_id in await service.async_extract_config_entry_ids(hass, call):
+            await hass.data[DOMAIN][entry_id].do_fwupdate()
+
+    hass.services.async_register(DOMAIN, "bridge_reboot", async_reboot)
+    hass.services.async_register(DOMAIN, "bridge_fwupdate", async_fwupdate)
+
     return True
 
 
