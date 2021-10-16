@@ -9,14 +9,6 @@ import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required("address"): cv.string,
-    vol.Required("hass_url"): cv.string,
-    vol.Required("token"): cv.string,
-    vol.Optional("web_token"): cv.string,
-    vol.Optional("name"): cv.string,
-})
-
 
 class OpenWrtConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
@@ -25,8 +17,8 @@ class OpenWrtConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def find_nuki_devices(self, config: dict):
         nuki = NukiInterface(
-            self.hass, 
-            bridge=config["address"], 
+            self.hass,
+            bridge=config["address"],
             token=config["token"]
         )
         try:
@@ -50,13 +42,13 @@ class OpenWrtConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "address": bridge_address,
                 "hass_url": hass_url
             }
-        
+
         if user_input.get("token"):
             devices = await self.find_nuki_devices(user_input)
             if len(devices) >= 1:
                 title = user_input.get("name") or devices[0]["name"]
                 return self.async_create_entry(
-                    title=title, 
+                    title=title,
                     data=user_input
                 )
             errors = dict(base="bridge_error")
@@ -66,13 +58,18 @@ class OpenWrtConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required("token", default=user_input.get("token")): cv.string,
             vol.Optional("web_token", default=user_input.get("web_token", "")): cv.string,
             vol.Optional("name", default=user_input.get("name", "")): cv.string,
+            vol.Required("update_seconds", default=user_input.get("update_seconds", 30)): vol.All(
+                cv.positive_int,
+                vol.Range(min=10, max=600)
+            ),
         })
         return self.async_show_form(
             step_id="user", data_schema=schema
         )
-    
+
     # def async_get_options_flow(config_entry):
     #     return OptionsFlowHandler(config_entry)
+
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
 

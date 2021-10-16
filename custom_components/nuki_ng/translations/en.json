@@ -9,7 +9,8 @@
           "address": "Nuki bridge hostname or IP address",
           "token": "Bridge Api token",
           "web_token": "Web Api token (optional)",
-          "hass_url": "Home Assistant internal URL"
+          "hass_url": "Home Assistant internal URL",
+          "update_seconds": "State polling interval (seconds)"
         }
       }
     },
@@ -24,7 +25,8 @@
         "data": {
           "token": "Bridge Api token",
           "web_token": "Web Api token (optional)",
-          "hass_url": "Home Assistant internal URL"
+          "hass_url": "Home Assistant internal URL",
+          "update_seconds": "State polling interval (seconds)"
         }
       }
     }

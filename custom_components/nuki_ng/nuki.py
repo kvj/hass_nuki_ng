@@ -159,7 +159,7 @@ class NukiCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_method=self._make_update_method(),
-            update_interval=timedelta(seconds=30)
+            update_interval=timedelta(seconds=config.get("update_seconds", 30))
         )
 
         hook_id = "%s_%s" % (BRIDGE_HOOK, entry.entry_id)
