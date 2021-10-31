@@ -71,7 +71,7 @@ class NukiInterface:
     async def bridge_fwupdate(self):
         return await self.async_json(lambda r: r.get(self.bridge_url("/fwupdate")))
 
-    async def bridge_lock_action(self, dev_id: str, action: str):
+    async def bridge_lock_action(self, dev_id: str, action: str, device_type):
         actions_map = {
             "unlock": 1,
             "lock": 2,
@@ -82,7 +82,11 @@ class NukiInterface:
         return await self.async_json(
             lambda r: r.get(self.bridge_url(
                 "/lockAction",
-                dict(action=actions_map[action], nukiId=dev_id)
+                dict(
+                    action=actions_map[action],
+                    nukiId=dev_id,
+                    deviceType=device_type
+                )
             ))
         )
 
@@ -242,7 +246,8 @@ class NukiCoordinator(DataUpdateCoordinator):
             _LOGGER.exception(f"Failed to remove callback")
 
     async def action(self, dev_id: str, action: str):
-        result = await self.api.bridge_lock_action(dev_id, action)
+        device_type = self.device_data(dev_id).get("deviceType")
+        result = await self.api.bridge_lock_action(dev_id, action, device_type)
         if result.get("success"):
             await self.async_request_refresh()
         _LOGGER.debug(f"action result: {result}, {action}")
