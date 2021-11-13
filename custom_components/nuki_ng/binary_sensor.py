@@ -45,6 +45,10 @@ class BatteryLow(NukiEntity, BinarySensorEntity):
     def device_class(self) -> str:
         return "battery"
 
+    @property
+    def entity_category(self):
+        return "diagnostic"
+
 
 class BatteryCharging(NukiEntity, BinarySensorEntity):
     def __init__(self, coordinator, device_id):
@@ -56,6 +60,10 @@ class BatteryCharging(NukiEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return self.last_state.get("batteryCharging", False)
+
+    @property
+    def entity_category(self):
+        return "diagnostic"
 
 
 class KeypadBatteryLow(NukiEntity, BinarySensorEntity):
@@ -71,6 +79,10 @@ class KeypadBatteryLow(NukiEntity, BinarySensorEntity):
     @property
     def device_class(self) -> str:
         return "battery"
+
+    @property
+    def entity_category(self):
+        return "diagnostic"
 
 
 class RingAction(NukiEntity, BinarySensorEntity):
@@ -88,6 +100,10 @@ class RingAction(NukiEntity, BinarySensorEntity):
         return {
             "timestamp": self.last_state.get("ringactionTimestamp")
         }
+
+    @property
+    def entity_category(self):
+        return "diagnostic"
 
 
 class LockState(NukiEntity, BinarySensorEntity):
@@ -142,6 +158,10 @@ class BridgeServerConnection(NukiBridge, BinarySensorEntity):
             "wifiFirmwareVersion": versions.get("wifiFirmwareVersion")
         }
 
+    @property
+    def entity_category(self):
+        return "diagnostic"
+
 
 class BridgeCallbackSet(NukiBridge, BinarySensorEntity):
 
@@ -162,3 +182,7 @@ class BridgeCallbackSet(NukiBridge, BinarySensorEntity):
             for item in callbacks:
                 result["callback#%s" % (item["id"])] = item["url"]
         return result
+
+    @property
+    def entity_category(self):
+        return "diagnostic"

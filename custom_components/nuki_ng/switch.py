@@ -7,6 +7,7 @@ from .constants import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass,
     entry,
@@ -21,6 +22,7 @@ async def async_setup_entry(
             entities.append(AuthEntry(coordinator, dev_id, auth_id))
     async_add_entities(entities)
     return True
+
 
 class AuthEntry(NukiEntity, SwitchEntity):
 
@@ -45,10 +47,10 @@ class AuthEntry(NukiEntity, SwitchEntity):
     @property
     def icon(self):
         mapping = {
-            0: "mdi:devices", 
-            1: "mdi:network", 
-            2: "mdi:remote", 
-            3: "mdi:focus-field", 
+            0: "mdi:devices",
+            1: "mdi:network",
+            2: "mdi:remote",
+            3: "mdi:focus-field",
             13: "mdi:form-textbox-password"
         }
         return mapping.get(self.auth_data.get("type", -1), "mdi:account-question")
@@ -70,7 +72,7 @@ class AuthEntry(NukiEntity, SwitchEntity):
         return {
             "Remote allowed": self.auth_data.get("remoteAllowed"),
             "Lock count": self.auth_data.get("lockCount"),
-            "Last active date": self.auth_data.get("lastActiveDate") 
+            "Last active date": self.auth_data.get("lastActiveDate")
         }
 
     @property
@@ -81,3 +83,7 @@ class AuthEntry(NukiEntity, SwitchEntity):
             "manufacturer": "Nuki",
             "via_device": ("id", self.device_id)
         }
+
+    @property
+    def entity_category(self):
+        return "config"

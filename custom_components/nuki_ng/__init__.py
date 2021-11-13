@@ -57,7 +57,8 @@ async def async_setup(hass: HomeAssistant, config) -> bool:
 
     hass.services.async_register(DOMAIN, "bridge_reboot", async_reboot)
     hass.services.async_register(DOMAIN, "bridge_fwupdate", async_fwupdate)
-    hass.services.async_register(DOMAIN, "bridge_delete_callback", async_delete_callback)
+    hass.services.async_register(
+        DOMAIN, "bridge_delete_callback", async_delete_callback)
 
     return True
 
@@ -161,11 +162,4 @@ class NukiBridge(CoordinatorEntity):
             "manufacturer": "Nuki",
             "model": model,
             "sw_version": versions.get("firmwareVersion"),
-        }
-
-    @property
-    def extra_state_attributes(self):
-        versions = self.data.get("versions", {})
-        return {
-            "wifiFirmwareVersion": versions.get("wifiFirmwareVersion")
         }
