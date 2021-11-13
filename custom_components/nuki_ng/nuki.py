@@ -96,10 +96,11 @@ class NukiInterface:
                             ))
         _LOGGER.debug(f"bridge_check_callback: {callbacks}, {callback}")
         result = dict()
+        callbacks_list = callbacks.get("callbacks", [])
         for item in callbacks.get("callbacks", []):
             if item["url"] == callback:
                 if add:
-                    return None
+                    return callbacks_list
                 result = await self.async_json(
                     lambda r: r.get(self.bridge_url(
                         "/callback/remove",
@@ -115,6 +116,7 @@ class NukiInterface:
                 ))
         if not result.get("success", True):
             raise ConnectionError(result.get("message"))
+        return callbacks_list
 
     def web_url(self, path):
         return f"https://api.nuki.io{path}"
@@ -196,10 +198,9 @@ class NukiCoordinator(DataUpdateCoordinator):
 
     async def _update(self):
         try:
-            callback_updated = False
+            callbacks_list = None
             try:
-                await self.api.bridge_check_callback(self.bridge_hook)
-                callback_updated = True
+                callbacks_list = await self.api.bridge_check_callback(self.bridge_hook)
             except Exception:
                 _LOGGER.exception(
                     f"Failed to update callback {self.bridge_hook}")
@@ -208,7 +209,7 @@ class NukiCoordinator(DataUpdateCoordinator):
             info_mapping = dict()
             for item in info.get("scanResults", []):
                 info_mapping[item.get("nukiId")] = item
-            info["callback_updated"] = callback_updated
+            info["callbacks_list"] = callbacks_list
             result = dict(devices={}, info=info)
             for item in latest:
                 dev_id = item["nukiId"]
@@ -257,6 +258,9 @@ class NukiCoordinator(DataUpdateCoordinator):
 
     async def do_fwupdate(self):
         await self.api.bridge_fwupdate()
+
+    async def do_delete_callback(self, callback):
+        await self.api.bridge_check_callback(callback, add=False)
 
     def device_data(self, dev_id: str):
         return self.data.get("devices", {}).get(dev_id, {})

@@ -51,8 +51,13 @@ async def async_setup(hass: HomeAssistant, config) -> bool:
         for entry_id in await service.async_extract_config_entry_ids(hass, call):
             await hass.data[DOMAIN][entry_id].do_fwupdate()
 
+    async def async_delete_callback(call):
+        for entry_id in await service.async_extract_config_entry_ids(hass, call):
+            await hass.data[DOMAIN][entry_id].do_delete_callback(call.data.get("callback"))
+
     hass.services.async_register(DOMAIN, "bridge_reboot", async_reboot)
     hass.services.async_register(DOMAIN, "bridge_fwupdate", async_fwupdate)
+    hass.services.async_register(DOMAIN, "bridge_delete_callback", async_delete_callback)
 
     return True
 

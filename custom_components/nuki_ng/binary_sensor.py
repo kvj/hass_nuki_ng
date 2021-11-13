@@ -149,8 +149,16 @@ class BridgeCallbackSet(NukiBridge, BinarySensorEntity):
         super().__init__(coordinator)
         self.set_id("callback_set")
         self.set_name("Bridge Callback Set")
-        self._attr_device_class = "connectivity"
 
     @property
     def is_on(self) -> bool:
-        return self.data.get("callback_updated", False)
+        return self.data.get("callbacks_list") != None
+
+    @property
+    def extra_state_attributes(self):
+        result = {}
+        callbacks = self.data.get("callbacks_list")
+        if callbacks:
+            for item in callbacks:
+                result["callback#%s" % (item["id"])] = item["url"]
+        return result
