@@ -31,13 +31,20 @@ class OpenWrtConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(f"Error getting list of devices: {err}")
             return []
 
+    def _get_hass_url(self, hass):
+        try:
+            return get_url(hass)
+        except Exception as err:
+            _LOGGER.exception(f"Error getting HASS url: {err}")
+            return ""
+
     async def async_step_user(self, user_input):
         errors = None
         _LOGGER.debug(f"Input: {user_input}")
         if user_input is None:
             nuki = NukiInterface(self.hass)
             bridge_address = await nuki.discover_bridge()
-            hass_url = get_url(self.hass)
+            hass_url = self._get_hass_url(self.hass)
             user_input = {
                 "address": bridge_address,
                 "hass_url": hass_url
