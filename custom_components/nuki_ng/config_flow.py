@@ -19,17 +19,30 @@ class OpenWrtConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         nuki = NukiInterface(
             self.hass,
             bridge=config["address"],
-            token=config["token"]
+            token=config["token"],
+            web_token=config["web_token"]
         )
-        try:
-            statuses = await nuki.bridge_list()
-            _LOGGER.debug(f"bridge_list: {statuses}")
-            return list(map(lambda x: dict(
-                id=x["nukiId"], name=x["name"]
-            ), statuses))
-        except Exception as err:
-            _LOGGER.exception(f"Error getting list of devices: {err}")
-            return []
+        title = None
+        if config["token"]:
+            try:
+                response = await nuki.bridge_list()
+                _LOGGER.debug(f"bridge devices: {response}")
+                title = response[0]["name"]
+            except Exception as err:
+                _LOGGER.exception(
+                    f"Failed to get list of devices from bridge: {err}")
+                return title, "invalid_bridge_token"
+        if config["web_token"]:
+            try:
+                response = await nuki.web_list()
+                _LOGGER.debug(f"web devices: {response}")
+                if not title:
+                    title = response[0]["name"]
+            except Exception as err:
+                _LOGGER.exception(
+                    f"Failed to get list of devices from web API: {err}")
+                return title, "invalid_web_token"
+        return title, None
 
     def _get_hass_url(self, hass):
         try:
@@ -49,20 +62,22 @@ class OpenWrtConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "address": bridge_address,
                 "hass_url": hass_url
             }
-
-        if user_input.get("token"):
-            devices = await self.find_nuki_devices(user_input)
-            if len(devices) >= 1:
-                title = user_input.get("name") or devices[0]["name"]
+        elif not user_input.get("token") and not user_input.get("web_token"):
+            errors = dict(base="no_token")
+        elif user_input.get("token") and not user_input.get("address"):
+            errors = dict(base="no_bridge_url")
+        elif user_input.get("token") or user_input.get("web_token"):
+            title, err = await self.find_nuki_devices(user_input)
+            if not err:
                 return self.async_create_entry(
-                    title=title,
+                    title=user_input.get("name") or title,
                     data=user_input
                 )
-            errors = dict(base="bridge_error")
+            errors = dict(base=err)
         schema = vol.Schema({
-            vol.Required("address", default=user_input.get("address")): cv.string,
-            vol.Required("hass_url", default=user_input.get("hass_url")): cv.string,
-            vol.Required("token", default=user_input.get("token")): cv.string,
+            vol.Optional("address", default=user_input.get("address", "")): cv.string,
+            vol.Optional("hass_url", default=user_input.get("hass_url", "")): cv.string,
+            vol.Optional("token", default=user_input.get("token", "")): cv.string,
             vol.Optional("web_token", default=user_input.get("web_token", "")): cv.string,
             vol.Optional("name", default=user_input.get("name", "")): cv.string,
             vol.Required("update_seconds", default=user_input.get("update_seconds", 30)): vol.All(
@@ -71,7 +86,7 @@ class OpenWrtConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         })
         return self.async_show_form(
-            step_id="user", data_schema=schema
+            step_id="user", data_schema=schema, errors=errors
         )
 
     # def async_get_options_flow(config_entry):

@@ -25,8 +25,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entities.append(RingAction(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "doorsensorState"):
             entities.append(DoorState(coordinator, dev_id))
-    entities.append(BridgeServerConnection(coordinator))
-    entities.append(BridgeCallbackSet(coordinator))
+    if coordinator.api.can_bridge():
+        entities.append(BridgeServerConnection(coordinator))
+        entities.append(BridgeCallbackSet(coordinator))
     async_add_entities(entities)
     return True
 

@@ -145,7 +145,7 @@ class NukiBridge(CoordinatorEntity):
 
     @property
     def data(self) -> dict:
-        return self.coordinator.data.get("info", {})
+        return self.coordinator.data.get("bridge_info", {})
 
     @property
     def get_id(self):

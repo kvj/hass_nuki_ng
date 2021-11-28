@@ -14,11 +14,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
     data = entry.as_dict()
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities.append(BridgeWifiVersion(coordinator))
-    entities.append(BridgeVersion(coordinator))
+    if coordinator.api.can_bridge():
+        entities.append(BridgeWifiVersion(coordinator))
+        entities.append(BridgeVersion(coordinator))
     for dev_id in coordinator.data.get("devices", {}):
         entities.append(LockState(coordinator, dev_id))
-        entities.append(RSSI(coordinator, dev_id))
+        if coordinator.api.can_bridge():
+            entities.append(RSSI(coordinator, dev_id))
         entities.append(LockVersion(coordinator, dev_id))
         if coordinator.device_supports(dev_id, "batteryChargeState"):
             entities.append(Battery(coordinator, dev_id))
@@ -84,7 +86,7 @@ class RSSI(NukiEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return self.data.get("bridgeInfo", {}).get("rssi")
+        return self.data.get("bridge_info", {}).get("rssi")
 
     @property
     def state(self):

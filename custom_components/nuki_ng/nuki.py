@@ -90,6 +90,24 @@ class NukiInterface:
             ))
         )
 
+    async def web_lock_action(self, dev_id: str, action: str):
+        actions_map = {
+            "unlock": 1,
+            "lock": 2,
+            "open": 3,
+            "lock_n_go": 4,
+            "lock_n_go_open": 5,
+            "activate_continuous_mode": 6,
+            "deactivate_continuous_mode": 7
+        }
+        await self.web_async_json(
+            lambda r, h: r.post(
+                self.web_url(f"/smartlock/{dev_id}/action"),
+                headers=h,
+                json=dict(action=actions_map.get(action))
+            )
+        )
+
     async def bridge_check_callback(self, callback: str, add: bool = True):
         callbacks = await self.async_json(
             lambda r: r.get(self.bridge_url("/callback/list")
@@ -126,10 +144,14 @@ class NukiInterface:
             "authorization": f"Bearer {self.web_token}"
         }))
 
+    def can_web(self):
+        return True if self.web_token else False
+
+    def can_bridge(self):
+        return True if self.token and self.bridge else False
+
     async def web_list_all_auths(self, dev_id: str):
         result = {}
-        if not self.web_token:
-            return result
         response = await self.web_async_json(
             lambda r, h: r.get(
                 self.web_url(f"/smartlock/{dev_id}/auth"),
@@ -140,8 +162,46 @@ class NukiInterface:
             result[item["id"]] = item
         return result
 
+    async def web_list(self):
+        door_state_map = {0: "unavailable", 1: "deactivated", 2: "door closed",
+                          3: "door opened", 4: "door state unknown", 5: "calibrating"}
+        device_state_map = {
+            0: {0: "uncalibrated", 1: "locked", 2: "unlocking", 3: "unlocked", 4: "locking", 5: "unlatched", 6: "unlocked (lock 'n' go)", 7: "unlatching", 254: "motor blocked", 255: "undefined"},
+            2: {0: "untrained", 1: "online", 3: "ring to open active", 5: "open", 7: "opening", 253: "boot run", 255: "undefined"},
+        }
+        resp = await self.web_async_json(
+            lambda r, h: r.get(
+                self.web_url(f"/smartlock"),
+                headers=h
+            )
+        )
+        result = []
+        for item in resp:
+            if item.get("type") not in (0, 2):
+                continue
+            state = item.get("state", {})
+            result.append({
+                "deviceType": item.get("type"),
+                "nukiId": item.get("smartlockId"),
+                "name": item.get("name"),
+                "firmwareVersion": str(item.get("firmwareVersion")),
+                "lastKnownState": {
+                    "mode": state.get("mode"),
+                    "state": state.get("state"),
+                    "stateName": device_state_map.get(item.get("type"), {}).get(state.get("state")),
+                    "batteryCritical": state.get("batteryCritical"),
+                    "batteryCharging": state.get("batteryCharging"),
+                    "batteryChargeState": state.get("batteryCharge"),
+                    "keypadBatteryCritical": state.get("keypadBatteryCritical"),
+                    "doorsensorState": state.get("doorState"),
+                    "doorsensorStateName": door_state_map.get(state.get("doorState")),
+                    "timestamp": item.get("updateDate")
+                }
+            })
+        return result
+
     async def web_update_auth(self, dev_id: str, auth_id: str, changes: dict):
-        response = await self.web_async_json(
+        await self.web_async_json(
             lambda r, h: r.post(
                 self.web_url(f"/smartlock/{dev_id}/auth/{auth_id}"),
                 headers=h,
@@ -199,27 +259,33 @@ class NukiCoordinator(DataUpdateCoordinator):
     async def _update(self):
         try:
             callbacks_list = None
-            try:
-                callbacks_list = await self.api.bridge_check_callback(self.bridge_hook)
-            except Exception:
-                _LOGGER.exception(
-                    f"Failed to update callback {self.bridge_hook}")
-            latest = await self.api.bridge_list()
-            info = await self.api.bridge_info()
+            bridge_info = None
             info_mapping = dict()
-            for item in info.get("scanResults", []):
-                info_mapping[item.get("nukiId")] = item
-            info["callbacks_list"] = callbacks_list
-            result = dict(devices={}, info=info)
-            for item in latest:
-                dev_id = item["nukiId"]
+            device_list = None
+            if self.api.can_bridge():
                 try:
-                    item["web_auth"] = await self.api.web_list_all_auths(dev_id)
-                except ConnectionError:
-                    _LOGGER.exception("Error while fetching auth:")
+                    callbacks_list = await self.api.bridge_check_callback(self.bridge_hook)
+                except Exception:
+                    _LOGGER.exception(
+                        f"Failed to update callback {self.bridge_hook}")
+                bridge_info = await self.api.bridge_info()
+                for item in bridge_info.get("scanResults", []):
+                    info_mapping[item.get("nukiId")] = item
+                bridge_info["callbacks_list"] = callbacks_list
+                device_list = await self.api.bridge_list()
+            if self.api.can_web() and not device_list:
+                device_list = await self.api.web_list()
+            result = dict(devices={}, bridge_info=bridge_info)
+            for item in device_list:
+                dev_id = item["nukiId"]
+                if self.api.can_web():
+                    try:
+                        item["web_auth"] = await self.api.web_list_all_auths(dev_id)
+                    except ConnectionError:
+                        _LOGGER.exception("Error while fetching auth:")
                 result["devices"][dev_id] = item
-                result["devices"][dev_id]["bridgeInfo"] = info_mapping.get(
-                    dev_id, {})
+                result["devices"][dev_id]["bridge_info"] = info_mapping.get(
+                    dev_id)
             _LOGGER.debug(f"_update: {json.dumps(result)}")
             return result
         except Exception as err:
@@ -241,26 +307,41 @@ class NukiCoordinator(DataUpdateCoordinator):
 
     async def unload(self):
         try:
-            result = await self.api.bridge_check_callback(self.bridge_hook, add=False)
-            _LOGGER.debug(f"unload: {result} {self.bridge_hook}")
+            if self.api.can_bridge():
+                result = await self.api.bridge_check_callback(self.bridge_hook, add=False)
+                _LOGGER.debug(f"unload: {result} {self.bridge_hook}")
         except Exception:
             _LOGGER.exception(f"Failed to remove callback")
 
     async def action(self, dev_id: str, action: str):
-        device_type = self.device_data(dev_id).get("deviceType")
-        result = await self.api.bridge_lock_action(dev_id, action, device_type)
-        if result.get("success"):
+        if self.api.can_bridge():
+            device_type = self.device_data(dev_id).get("deviceType")
+            result = await self.api.bridge_lock_action(dev_id, action, device_type)
+            if result.get("success"):
+                await self.async_request_refresh()
+            _LOGGER.debug(f"bridge action result: {result}, {action}")
+        elif self.api.can_web():
+            await self.api.web_lock_action(dev_id, action)
             await self.async_request_refresh()
-        _LOGGER.debug(f"action result: {result}, {action}")
+            _LOGGER.debug(f"web action result: {action}")
 
     async def do_reboot(self):
-        await self.api.bridge_reboot()
+        if self.api.can_bridge():
+            await self.api.bridge_reboot()
+        else:
+            raise ConnectionError("Not supported")
 
     async def do_fwupdate(self):
-        await self.api.bridge_fwupdate()
+        if self.api.can_bridge():
+            await self.api.bridge_fwupdate()
+        else:
+            raise ConnectionError("Not supported")
 
     async def do_delete_callback(self, callback):
-        await self.api.bridge_check_callback(callback, add=False)
+        if self.api.can_bridge():
+            await self.api.bridge_check_callback(callback, add=False)
+        else:
+            raise ConnectionError("Not supported")
 
     def device_data(self, dev_id: str):
         return self.data.get("devices", {}).get(dev_id, {})
@@ -275,7 +356,7 @@ class NukiCoordinator(DataUpdateCoordinator):
         return self.device_data(dev_id).get("deviceType") == 2
 
     def device_supports(self, dev_id: str, feature: str) -> bool:
-        return feature in self.device_data(dev_id).get("lastKnownState", {})
+        return self.device_data(dev_id).get("lastKnownState", {}).get(feature) != None
 
     async def update_web_auth(self, dev_id: str, auth: dict, changes: dict):
         if "id" not in auth:
