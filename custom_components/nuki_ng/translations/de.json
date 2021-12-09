@@ -1,0 +1,35 @@
+{
+    "title": "Nuki Lock",
+    "config": {
+      "step": {
+        "user": {
+          "title": "Neues Nuki Gerät",
+          "data": {
+            "name": "Name des Eintrags (optional)",
+            "address": "Hostname oder IP-Adresse der Nuki Bridge",
+            "token": "Bridge Api Token",
+            "web_token": "Web Api Token",
+            "hass_url": "Home Assistant interne URL",
+            "update_seconds": "Intervall der Statusabfrage (Sekunden)"
+          }
+        }
+      },
+      "error": {
+        "invalid_bridge_token": "Fehler in der Kommunikation mit der Nuki Bridge",
+        "invalid_web_token": "Fehler in der Kommunikation mit der Nuki Web API",
+        "no_token": "Entweder ist ein Bridge-Token oder ein Web-API-Token erforderlich",
+        "no_bridge_url": "Die Adresse der Bridge ist erforderlich"
+      }
+    },
+    "options": {
+      "step": {
+        "options": {
+          "title": "Nuki Gerät konfigurieren",
+          "data": {
+            "update_seconds": "Intervall der Statusabfrage (Sekunden)"
+          }
+        }
+      }
+    }
+  }
+  
