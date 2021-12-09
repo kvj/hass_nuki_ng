@@ -10,7 +10,7 @@ import voluptuous as vol
 _LOGGER = logging.getLogger(__name__)
 
 
-class NukiNGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class OpenWrtConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input):
         return await self.async_step_user(user_input)
