@@ -66,7 +66,7 @@ In your setup, you could have several locks, but maybe no opener, no bridge or n
 #### Nuki Bridge:
 
 | Entity ID                                      | Type        |  Description                                                               |
-|------------------------------------------------|------------------------------------------------------------------------------------------|
+|------------------------------------------------|-------------|----------------------------------------------------------------------------|
 | binary_sensor.nuki_bridge_bridge_callback_set  | Diagnostic  | On, if the integration successfully registered a callback with the bridge  |
 | binary_sensor.nuki_bridge_connected            | Diagnostic  | On, if the bridge is reachable via WiFi                                    |
 | sensor.nuki_bridge_firmware_version            | Diagnostic  | The current firmware version of the bridge                                 |
