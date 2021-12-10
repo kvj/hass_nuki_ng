@@ -6,7 +6,7 @@
         "title": "Nouvel appareil Nuki",
         "data": {
           "name": "Nom de l'entrée (facultatif)",
-          "address": "Nom d'hôte ou adresse IP du pont Nuki,
+          "address": "Nom d'hôte ou adresse IP du pont Nuki,"
           "token": "Jeton Api du pont",
           "web_token": "Jeton API Web",
           "hass_url": "URL interne de Home Assistant",
