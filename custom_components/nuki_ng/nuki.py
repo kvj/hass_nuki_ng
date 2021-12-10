@@ -177,7 +177,7 @@ class NukiInterface:
         )
         result = []
         for item in resp:
-            if item.get("type") not in (0, 2):
+            if item.get("type") not in (0, 2, 4):
                 continue
             state = item.get("state", {})
             result.append({
