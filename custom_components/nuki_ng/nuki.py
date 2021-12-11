@@ -350,7 +350,7 @@ class NukiCoordinator(DataUpdateCoordinator):
         return self.data.get("info", {})
 
     def is_lock(self, dev_id: str) -> bool:
-        return self.device_data(dev_id).get("deviceType") == 0
+        return self.device_data(dev_id).get("deviceType") in (0, 4)
 
     def is_opener(self, dev_id: str) -> bool:
         return self.device_data(dev_id).get("deviceType") == 2
