@@ -1,0 +1,34 @@
+{
+  "title": "Nuki Lock",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nouvel appareil Nuki",
+        "data": {
+          "name": "Nom de l'entrée (facultatif)",
+          "address": "Nom d'hôte ou adresse IP du pont Nuki,"
+          "token": "Jeton Api du pont",
+          "web_token": "Jeton API Web",
+          "hass_url": "URL interne de Home Assistant",
+          "update_seconds": "Intervalle d'interrogation d'état (secondes)"
+        }
+      }
+    },
+    "error": {
+      "invalid_bridge_token": "Erreur de communication avec le pont Nuki",
+      "invalid_web_token": "Erreur de communication avec l'API Web Nuki",
+      "no_token": "Un jeton du pont ou un jeton API Web est requis",
+      "no_bridge_url": "L'adresse du pont est requise"
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "title": "Configurer l'appareil Nuki",
+        "data": {
+          "update_seconds": "Intervalle d'interrogation d'état (secondes)"
+        }
+      }
+    }
+  }
+}
