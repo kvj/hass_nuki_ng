@@ -17,13 +17,16 @@
   
 ## Setup
 
+{% if not installed %}
+
 ### Installation:
 * Go to HACS -> Integrations
 * Click the three dots on the top right and select `Custom Repositories`
 * Enter `https://github.com/kvj/hass_nuki_ng` as repository, select the category `Integration` and click Add
 * A new custom integration shows up for installation (Nuki Lock) - install it
 * Restart Home Assistant
-  
+
+{% endif %}
   
 ### Configuration:
 * Go to Configuration -> Integrations
