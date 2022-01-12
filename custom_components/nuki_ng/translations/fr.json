@@ -18,7 +18,8 @@
       "invalid_bridge_token": "Erreur de communication avec le pont Nuki",
       "invalid_web_token": "Erreur de communication avec l'API Web Nuki",
       "no_token": "Un jeton du pont ou un jeton API Web est requis",
-      "no_bridge_url": "L'adresse du pont est requise"
+      "no_bridge_url": "L'adresse du pont est requise",
+      "https_not_supported": "Bridge doesn't support HTTPS callbacks. Please make your Home Assistant accessible via HTTP"
     }
   },
   "options": {
