@@ -8,6 +8,7 @@ from homeassistant.components import webhook
 import requests
 import logging
 import json
+import re
 from datetime import timedelta
 from urllib.parse import urlencode
 
@@ -57,7 +58,11 @@ class NukiInterface:
 
     def bridge_url(self, path: str, extra=None) -> str:
         extra_str = "&%s" % (urlencode(extra)) if extra else ""
-        return f"http://{self.bridge}:8080{path}?token={self.token}{extra_str}"
+        url = f"http://{self.bridge}:8080"
+        if re.match(".+\\:\d+$", self.bridge):
+            # Port inside
+            url = f"http://{self.bridge}"
+        return f"{url}{path}?token={self.token}{extra_str}"
 
     async def bridge_list(self):
         return await self.async_json(lambda r: r.get(self.bridge_url("/list")))
