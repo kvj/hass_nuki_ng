@@ -17,13 +17,16 @@
   
 ## Setup
 
+{% if not installed %}
+
 ### Installation:
 * Go to HACS -> Integrations
 * Click the three dots on the top right and select `Custom Repositories`
 * Enter `https://github.com/kvj/hass_nuki_ng` as repository, select the category `Integration` and click Add
 * A new custom integration shows up for installation (Nuki Lock) - install it
 * Restart Home Assistant
-  
+
+{% endif %}
   
 ### Configuration:
 * Go to Configuration -> Integrations
@@ -188,3 +191,32 @@ The attribute should appear as a `target` for the service.
 | Service data attribute    | Optional | Description                                           |
 |---------------------------|----------|-------------------------------------------------------|
 | `command`                 |       no | URL to delete.                                        |
+
+## Useful tips
+
+### Open/unlatch Nuki lock via UI
+
+Even though the component supports the `lock.open` service and advertises support of it, Lovelace UI doesn't show any controls to trigger. This can be achieved via simple script similar to the one below:
+```yaml
+alias: Nuki Lock Open
+sequence:
+  - device_id: 8d159025411a270ecb9024794bc54361
+    domain: lock
+    entity_id: lock.nuki_front_door_lock
+    type: open
+mode: single
+icon: mdi:lock-open
+```
+
+or manually calling the service:
+```yaml
+type: button
+entity: lock.nuki_front_door_lock
+tap_action:
+  action: call-service
+  service: lock.open
+  service_data: {}
+  target:
+    entity_id: lock.nuki_front_door_lock
+name: Nuki
+```
