@@ -19,7 +19,7 @@
         "invalid_web_token": "Fehler in der Kommunikation mit der Nuki Web API",
         "no_token": "Entweder ist ein Bridge-Token oder ein Web-API-Token erforderlich",
         "no_bridge_url": "Die Adresse der Bridge ist erforderlich",
-        "https_not_supported": "Bridge doesn't support HTTPS callbacks. Please make your Home Assistant accessible via HTTP"
+        "https_not_supported": "Die Bridge unterstützt keine HTTPS Callbacks. Bitte mache Home Assistant über HTTP verfügbar"
       }
     },
     "options": {
