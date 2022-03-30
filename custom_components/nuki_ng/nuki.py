@@ -1,3 +1,5 @@
+from hashlib import sha256
+from random import randint
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -9,7 +11,7 @@ import requests
 import logging
 import json
 import re
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from urllib.parse import urlencode
 
 from .constants import DOMAIN
@@ -22,12 +24,13 @@ BRIDGE_HOOK = "nuki_ng_bridge_hook"
 
 class NukiInterface:
     def __init__(
-        self, hass, *, bridge: str = None, token: str = None, web_token: str = None
+        self, hass, *, bridge: str = None, token: str = None, web_token: str = None, use_hashed: bool = False
     ):
         self.hass = hass
         self.bridge = bridge
         self.token = token
         self.web_token = web_token
+        self.use_hashed = use_hashed
 
     async def async_json(self, cb):
         response = await self.hass.async_add_executor_job(lambda: cb(requests))
@@ -54,6 +57,12 @@ class NukiInterface:
         if re.match(".+\\:\d+$", self.bridge):
             # Port inside
             url = f"http://{self.bridge}"
+        if self.use_hashed:
+            tz = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            rnr = randint(0, 65535)
+            to_hash = "%s,%s,%s" % (tz, rnr, self.token)
+            hashed = sha256(to_hash.encode("utf-8")).hexdigest()
+            return f"{url}{path}?ts={tz}&rnr={rnr}&hash={hashed}{extra_str}"
         return f"{url}{path}?token={self.token}{extra_str}"
 
     async def bridge_list(self):
@@ -260,6 +269,7 @@ class NukiCoordinator(DataUpdateCoordinator):
             bridge=config.get("address"),
             token=config.get("token"),
             web_token=config.get("web_token"),
+            use_hashed=config.get("use_hashed", False),
         )
         super().__init__(
             hass,
