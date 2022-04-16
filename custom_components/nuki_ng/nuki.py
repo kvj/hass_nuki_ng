@@ -30,7 +30,7 @@ class NukiInterface:
         self.bridge = bridge
         self.token = token
         self.web_token = web_token
-        self.use_hashed = use_hashed
+        self.use_hashed = False
 
     async def async_json(self, cb):
         response = await self.hass.async_add_executor_job(lambda: cb(requests))
