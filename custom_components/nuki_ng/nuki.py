@@ -151,7 +151,7 @@ class NukiInterface:
         callbacks_list = callbacks.get("callbacks", [])
         if len(callbacks_list) and callbacks_list[0]["url"] == callback:
             _LOGGER.debug("Callback is set")
-            return
+            return callbacks
         add_callbacks = [callback]
         for item in callbacks.get("callbacks", []):
             if item["url"] != callback:
@@ -164,7 +164,9 @@ class NukiInterface:
             if not result.get("success", True):
                 raise ConnectionError(result.get("message"))
         _LOGGER.debug("Callback is set - re-added")
-        return
+        return await self.async_json(
+            lambda r: r.get(self.bridge_url("/callback/list"))
+        )
 
     def web_url(self, path):
         return f"https://api.nuki.io{path}"
