@@ -1,0 +1,35 @@
+{
+  "title": "Cerradura Nuki",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nuevo dispositivo Nuki",
+        "data": {
+          "name": "Introduce nombre (opcional)",
+          "address": "Nombre de host o dirección IP del puente Nuki",
+          "token": "Clave API del puente",
+          "web_token": "Clave API de la Web",
+          "hass_url": "Dirección interna de Home Assistant",
+          "update_seconds": "Intervalo de sondeo del estado (segundos)"
+        }
+      }
+    },
+    "error": {
+      "invalid_bridge_token": "Error de comunicación con el puente Nuki",
+      "invalid_web_token": "Error de comunicación con la API Web de Nuki",
+      "no_token": "Debes introducir la clave API del puente o la clave API de la Web",
+      "no_bridge_url": "Debes introducir la dirección IP del puente",
+      "https_not_supported": "El puente no soporta callbacks de tipo HTTPS. Asegúrate que tu Home Assistant es accesible vía HTTP"
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "title": "Configurar dispositivo Nuki",
+        "data": {
+          "update_seconds": "Intervalo de sondeo del estado (segundos)"
+        }
+      }
+    }
+  }
+}
