@@ -1,0 +1,35 @@
+{
+  "title": "Nuki Lock",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Novo dispositivo Nuki",
+        "data": {
+          "name": "Nome do dispositivo (opcional)",
+          "address": "Nome de host ou endereço IP da ponte Nuki",
+          "token": "Token de API da ponte",
+          "web_token": "Token da API da Web",
+          "hass_url": "URL interna do Home Assistant",
+          "update_seconds": "Intervalo de escaneamento de estado (segundos)"
+        }
+      }
+    },
+    "error": {
+      "invalid_bridge_token": "Erro de comunicação com a ponte Nuki",
+      "invalid_web_token": "Erro de comunicação com a Nuki Web API",
+      "no_token": "É necessário o token da ponte ou o token da API da Web",
+      "no_bridge_url": "O endereço da ponte é obrigatório",
+      "https_not_supported": "A ponte não oferece suporte a retornos de chamada HTTPS. Por favor, torne seu Home Assistant acessível via HTTP"
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "title": "Configurar dispositivo Nuki",
+        "data": {
+          "update_seconds": "Intervalo de escaneamento de estado (segundos)"
+        }
+      }
+    }
+  }
+}
