@@ -383,20 +383,28 @@ class NukiCoordinator(DataUpdateCoordinator):
                 bridge_info["callbacks_list"] = callbacks_list
                 device_list = await self.api.bridge_list()
             if self.api.can_web():
-                web_list = await self.api.web_list()
+                try:
+                    web_list = await self.api.web_list()
+                except ConnectionError:
+                    _LOGGER.warning("Despite being configured, Web API request has failed")
+                    _LOGGER.exception("Error while fetching list of devices via web API:")
                 if not device_list:
                     device_list = web_list
             result = dict(devices={}, bridge_info=bridge_info)
+            if not device_list:
+                raise ConnectionError("No available device data")
             for key, item in device_list.items():
                 dev_id = item["nukiId"]
                 if self.api.can_web():
                     try:
                         item["web_auth"] = await self.api.web_list_all_auths(dev_id)
                     except ConnectionError:
+                        _LOGGER.warning("Despite being configured, Web API request has failed")
                         _LOGGER.exception("Error while fetching auth:")
                     try:
                         item["last_log"] = await self.api.web_get_last_unlock_log(dev_id)
                     except ConnectionError:
+                        _LOGGER.warning("Despite being configured, Web API request has failed")
                         _LOGGER.exception("Error while fetching last log entry")
                 if web_list:
                     item["config"] = web_list.get(dev_id, {}).get("config")
