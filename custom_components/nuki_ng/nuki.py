@@ -188,6 +188,25 @@ class NukiInterface:
     def can_bridge(self):
         return True if self.token and self.bridge else False
 
+    async def web_get_last_unlock_log(self, dev_id: str):
+        actions_map = {
+            1: "unlock",
+            3: "unlatch",
+            5: "lock_n_go_unlatch",
+        }
+        response = await self.web_async_json(
+            lambda r, h: r.get(self.web_url(f"/smartlock/{dev_id}/log"), headers=h)
+        )
+        for item in response:
+            if item.get("action") in (1, 3, 5):
+                # unlock, unlatch, lock'n'go with unlatch
+                return {
+                    "name": item.get("name"),
+                    "action": actions_map[item["action"]],
+                    "timestamp": item["date"].replace("Z", "+00:00"),
+                }
+        return dict()
+
     async def web_list_all_auths(self, dev_id: str):
         result = {}
         response = await self.web_async_json(
@@ -375,6 +394,10 @@ class NukiCoordinator(DataUpdateCoordinator):
                         item["web_auth"] = await self.api.web_list_all_auths(dev_id)
                     except ConnectionError:
                         _LOGGER.exception("Error while fetching auth:")
+                    try:
+                        item["last_log"] = await self.api.web_get_last_unlock_log(dev_id)
+                    except ConnectionError:
+                        _LOGGER.exception("Error while fetching last log entry")
                 if web_list:
                     item["config"] = web_list.get(dev_id, {}).get("config")
                     item["advancedConfig"] = web_list.get(dev_id, {}).get("advancedConfig")
