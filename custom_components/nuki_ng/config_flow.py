@@ -48,7 +48,8 @@ class NukiNGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 response = await nuki.web_list()
                 _LOGGER.debug(f"web devices: {response}")
                 if not title:
-                    title = response[0]["name"]
+                    first_device = next(iter(response.values()), {})
+                    title = first_device.get("name")
             except Exception as err:
                 _LOGGER.exception(
                     f"Failed to get list of devices from web API: {err}")
