@@ -1,5 +1,6 @@
 from hashlib import sha256
 from random import randint
+from socket import timeout
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BRIDGE_DISCOVERY_API = "https://api.nuki.io/discover/bridges"
 BRIDGE_HOOK = "nuki_ng_bridge_hook"
-
+BRIDGE_TIMEOUT = 10
 
 class NukiInterface:
     def __init__(
@@ -67,20 +68,20 @@ class NukiInterface:
         return f"{url}{path}?token={self.token}{extra_str}"
 
     async def bridge_list(self):
-        data = await self.async_json(lambda r: r.get(self.bridge_url("/list")))
+        data = await self.async_json(lambda r: r.get(self.bridge_url("/list"), timeout=BRIDGE_TIMEOUT))
         result = dict()
         for item in data:
             result[item.get("nukiId")] = item
         return result
 
     async def bridge_info(self):
-        return await self.async_json(lambda r: r.get(self.bridge_url("/info")))
+        return await self.async_json(lambda r: r.get(self.bridge_url("/info"), timeout=BRIDGE_TIMEOUT))
 
     async def bridge_reboot(self):
-        return await self.async_json(lambda r: r.get(self.bridge_url("/reboot")))
+        return await self.async_json(lambda r: r.get(self.bridge_url("/reboot"), timeout=BRIDGE_TIMEOUT))
 
     async def bridge_fwupdate(self):
-        return await self.async_json(lambda r: r.get(self.bridge_url("/fwupdate")))
+        return await self.async_json(lambda r: r.get(self.bridge_url("/fwupdate"), timeout=BRIDGE_TIMEOUT))
 
     async def bridge_lock_action(self, dev_id: str, action: str, device_type):
         actions_map = {
@@ -104,7 +105,8 @@ class NukiInterface:
                         nukiId=dev_id,
                         deviceType=device_type,
                     ),
-                )
+                ),
+                timeout=BRIDGE_TIMEOUT
             )
         )
 
@@ -131,7 +133,7 @@ class NukiInterface:
 
     async def bridge_remove_callback(self, callback: str):
         callbacks = await self.async_json(
-            lambda r: r.get(self.bridge_url("/callback/list"))
+            lambda r: r.get(self.bridge_url("/callback/list"), timeout=BRIDGE_TIMEOUT)
         )
         _LOGGER.debug(f"bridge_remove_callback: {callbacks}, {callback}")
         callbacks_list = callbacks.get("callbacks", [])
@@ -139,7 +141,8 @@ class NukiInterface:
             if item["url"] == callback:
                 result = await self.async_json(
                     lambda r: r.get(
-                        self.bridge_url("/callback/remove", {"id": item["id"]})
+                        self.bridge_url("/callback/remove", {"id": item["id"]}),
+                        timeout=BRIDGE_TIMEOUT
                     )
                 )
                 if not result.get("success", True):
@@ -149,7 +152,7 @@ class NukiInterface:
 
     async def bridge_check_callback(self, callback: str):
         callbacks = await self.async_json(
-            lambda r: r.get(self.bridge_url("/callback/list"))
+            lambda r: r.get(self.bridge_url("/callback/list"), timeout=BRIDGE_TIMEOUT)
         )
         _LOGGER.debug(f"bridge_check_callback: {callbacks}, {callback}")
         result = dict()
@@ -164,13 +167,13 @@ class NukiInterface:
             await self.bridge_remove_callback(item["url"])
         for callback_url in add_callbacks[:3]:
             result = await self.async_json(
-                lambda r: r.get(self.bridge_url("/callback/add", {"url": callback_url}))
+                lambda r: r.get(self.bridge_url("/callback/add", {"url": callback_url}), timeout=BRIDGE_TIMEOUT)
             )
             if not result.get("success", True):
                 raise ConnectionError(result.get("message"))
         _LOGGER.debug("Callback is set - re-added")
         callbacks = await self.async_json(
-            lambda r: r.get(self.bridge_url("/callback/list"))
+            lambda r: r.get(self.bridge_url("/callback/list"), timeout=BRIDGE_TIMEOUT)
         )
         return callbacks.get("callbacks", [])
 
