@@ -103,6 +103,15 @@ class RSSI(NukiEntity, SensorEntity):
 
 
 class DoorSensorState(NukiEntity, SensorEntity):
+    door_state_map = {1: "deactivated",
+                      2: "door closed",
+                      3: "door opened",
+                      4: "door state unknown",
+                      5: "calibrating",
+                      16: "uncalibrated",
+                      240: "removed",
+                      255: "unknown"}
+
     def __init__(self, coordinator, device_id):
         super().__init__(coordinator, device_id)
         self.set_id("sensor", "door_state")
@@ -110,9 +119,8 @@ class DoorSensorState(NukiEntity, SensorEntity):
         self._attr_icon = "mdi:door"
 
     @property
-    def state(self):
-        return self.last_state.get("doorsensorStateName")
-
+    def state(self):        
+        return self.door_state_map.get(self.last_state.get("doorsensorState"))
     @property
     def entity_category(self):
         return EntityCategory.DIAGNOSTIC
