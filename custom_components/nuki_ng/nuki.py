@@ -349,7 +349,6 @@ class NukiCoordinator(DataUpdateCoordinator):
             "bridge",
             hook_id,
             handler=self._make_bridge_hook_handler(),
-            local_only=True,
         )
 
     def _add_update(self, dev_id: str, update):
