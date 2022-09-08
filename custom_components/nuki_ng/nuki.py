@@ -1,6 +1,12 @@
 from hashlib import sha256
+<<<<<<< HEAD
 from random import randint
 from socket import timeout
+=======
+from random import randint, random
+
+from numpy import int16
+>>>>>>> impl. crypted token communication with bridge
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -12,7 +18,12 @@ import requests
 import logging
 import json
 import re
-from datetime import timedelta, datetime, timezone
+import hashlib
+import nacl.utils
+import nacl.secret
+import random
+import datetime 
+from datetime import timedelta, timezone
 from urllib.parse import urlencode
 
 from .constants import DOMAIN
@@ -31,7 +42,7 @@ class NukiInterface:
         self.bridge = bridge
         self.token = token
         self.web_token = web_token
-        self.use_hashed = False
+        self.use_hashed = use_hashed
 
     async def async_json(self, cb):
         response = await self.hass.async_add_executor_job(lambda: cb(requests))
@@ -60,11 +71,23 @@ class NukiInterface:
             # Port inside
             url = f"http://{self.bridge}"
         if self.use_hashed:
-            tz = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-            rnr = randint(0, 65535)
-            to_hash = "%s,%s,%s" % (tz, rnr, self.token)
-            hashed = sha256(to_hash.encode("utf-8")).hexdigest()
-            return f"{url}{path}?ts={tz}&rnr={rnr}&hash={hashed}{extra_str}"
+            # create parts of plaintext content 
+            rnr = str(random.randrange(0,65535))
+            date = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+            time = datetime.datetime.utcnow().strftime("%H:%M:%S")                        
+            s_plaintext_token = str(date) + "T" + str(time) + "Z," + rnr            
+            # calc NaCl box key
+            s_key = hashlib.sha256(str(self.token).encode('utf-8')).digest()            
+            # calc nonce for ctoken / according to libsoldium docu             
+            s_nonce_raw = nacl.utils.random(24)                                                
+            box = nacl.secret.SecretBox(s_key)
+            # create crypted token from plaintext
+            ctoken = box.encrypt(s_plaintext_token.encode('utf-8'), s_nonce_raw)            
+            # convert token and nonce to hex string 
+            s_ctoken_hex_str = ctoken.ciphertext.hex()
+            session_nonce_hex_str = s_nonce_raw.hex()            
+            return f"{url}{path}?ctoken={s_ctoken_hex_str}&nonce={session_nonce_hex_str}{extra_str}"
+
         return f"{url}{path}?token={self.token}{extra_str}"
 
     async def bridge_list(self):
@@ -74,8 +97,13 @@ class NukiInterface:
             result[item.get("nukiId")] = item
         return result
 
+<<<<<<< HEAD
     async def bridge_info(self):
         return await self.async_json(lambda r: r.get(self.bridge_url("/info"), timeout=BRIDGE_TIMEOUT))
+=======
+    async def bridge_info(self):                
+        return await self.async_json(lambda r: r.get(self.bridge_url("/info")))
+>>>>>>> impl. crypted token communication with bridge
 
     async def bridge_reboot(self):
         return await self.async_json(lambda r: r.get(self.bridge_url("/reboot"), timeout=BRIDGE_TIMEOUT))
