@@ -5,7 +5,7 @@
   "issue_tracker": "https://github.com/kvj/hass_nuki_ng/issues",
   "dependencies": [],
   "codeowners": ["@kvj"],
-  "requirements": [],
+  "requirements": ["pynacl"],
   "iot_class": "local_polling",
   "config_flow": true,
   "version": "0.2.1"
