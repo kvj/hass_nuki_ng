@@ -1,6 +1,6 @@
 from hashlib import sha256
 from socket import timeout
-from random import randint, random
+from random import random
 
 from numpy import int16
 
@@ -86,7 +86,7 @@ class NukiInterface:
             return f"{url}{path}?ctoken={s_ctoken_hex_str}&nonce={session_nonce_hex_str}{extra_str}"
 
         return f"{url}{path}?token={self.token}{extra_str}"
-        
+
     async def bridge_list(self):
         data = await self.async_json(lambda r: r.get(self.bridge_url("/list"), timeout=BRIDGE_TIMEOUT))
         result = dict()
