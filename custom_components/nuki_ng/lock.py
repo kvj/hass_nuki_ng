@@ -4,7 +4,7 @@ import logging
 
 from . import NukiEntity
 from .constants import DOMAIN
-from .states import LockStates
+from .states import LockStates, LockModes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +30,16 @@ class Lock(NukiEntity, LockEntity):
         return SUPPORT_OPEN
 
     @property
+    def lock_mode(self):
+        return self.last_state.get("mode", LockModes.DOOR_MODE.value)
+
+    @property
     def lock_state(self):
         return self.last_state.get("state", 255)
 
     @property
     def is_locked(self):
-        return LockStates(self.lock_state) == LockStates.LOCKED
+        return LockStates(self.lock_state) == LockStates.LOCKED and LockModes(self.lock_mode) == LockModes.DOOR_MODE
 
     @property
     def is_locking(self):
