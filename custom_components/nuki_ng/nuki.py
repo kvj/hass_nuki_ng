@@ -7,6 +7,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.helpers.network import get_url
 from homeassistant.components import webhook
+from homeassistant.exceptions import HomeAssistantError
 
 import requests
 import logging
