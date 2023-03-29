@@ -54,6 +54,9 @@ class Lock(NukiEntity, LockEntity):
         return LockStates(self.lock_state) == LockStates.MOTOR_BLOCKED
 
     async def async_lock(self, **kwargs):
+        """Lock the opener also disable Continuos Mode"""
+        if self.coordinator.is_opener(self.device_id) and LockModes(self.last_state.get("mode", LockModes.DOOR_MODE.value)) == LockModes.CONTINUOUS_MODE:
+            await self.coordinator.action(self.device_id, "deactivate_continuous_mode")
         await self.coordinator.action(self.device_id, "lock")
 
     async def async_unlock(self, **kwargs):
