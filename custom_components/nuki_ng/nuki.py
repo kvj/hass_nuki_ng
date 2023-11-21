@@ -5,6 +5,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.components import webhook
 from homeassistant.exceptions import HomeAssistantError
@@ -367,6 +368,13 @@ class NukiCoordinator(DataUpdateCoordinator):
                 last_state[key] = update[key]
         previous["lastKnownState"] = last_state
         self.async_set_updated_data(data)
+
+        """Turn off ring_action binary sensor after 5 seconds"""
+        if update.get("ringactionState", False) == True:
+            async def _schedule_callback(_now):
+                last_state["ringactionState"] = False
+                self.async_set_updated_data(data)
+            async_call_later(self.hass, 5, _schedule_callback)    
 
     async def _update(self):
         try:
