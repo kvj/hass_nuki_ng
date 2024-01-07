@@ -149,8 +149,7 @@ class LockButtonEnabled(NukiEntity, SwitchEntity):
         await self.coordinator.update_config(
             self.device_id, "config", dict(buttonEnabled=False)
         )
-
-
+        
 class OpenerRingSuppressionSwitch(NukiOpenerRingSuppressionEntity, SwitchEntity):
     
     def __init__(self, coordinator, device_id, suppression):
