@@ -20,6 +20,9 @@
 {% if not installed %}
 
 ### Installation:
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=kvj&repository=hass_nuki_ng&category=integration)
+
 * Go to HACS -> Integrations
 * Click the three dots on the top right and select `Custom Repositories`
 * Enter `https://github.com/kvj/hass_nuki_ng` as repository, select the category `Integration` and click Add
@@ -29,6 +32,9 @@
 {% endif %}
   
 ### Configuration:
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nuki_ng)
+
 * Go to Configuration -> Integrations
 * Click `Add Integration`
 * Search for `Nuki Lock` (not just `Nuki`, as this is the native integration from Home Assistant) and select it
