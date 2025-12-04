@@ -1,17 +1,14 @@
 from __future__ import annotations
-from .nuki import NukiCoordinator
-from .constants import DOMAIN, PLATFORMS
 
+import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import service
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
-
-import logging
+from .nuki import NukiCoordinator
+from .constants import DOMAIN, PLATFORMS
 
 OPENER_TYPE = 1
 LOCK_TYPE = 0
@@ -19,15 +16,20 @@ LOCK_TYPE = 0
 _LOGGER = logging.getLogger(__name__)
 
 
+# ------------------------------------------------------
+#  Home Assistant Setup
+# ------------------------------------------------------
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     data = entry.as_dict()["data"]
     _LOGGER.debug(f"async_setup_entry: {data}")
 
     coordinator = NukiCoordinator(hass, entry, data)
     entry.runtime_data = coordinator
-    await coordinator.async_config_entry_first_refresh()
 
+    await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 
@@ -39,41 +41,58 @@ async def async_unload_entry(hass: HomeAssistant, entry):
     return True
 
 
-def _register_coordinator_service(hass: HomeAssistant,  name: str, handler):
+def _register_coordinator_service(hass: HomeAssistant, name: str, handler):
     async def handler_(call):
         for entry_id in await service.async_extract_config_entry_ids(hass, call):
             if entry := hass.config_entries.async_get_entry(entry_id):
-                _LOGGER.debug(f"_register_coordinator_service: {name}: {entry.domain}")
                 if entry.domain == DOMAIN:
+                    _LOGGER.debug(f"service call: {name} for {entry.domain}")
                     handler(entry.runtime_data, call.data)
+
     hass.services.async_register(DOMAIN, name, handler_)
 
 
 async def async_setup(hass: HomeAssistant, config) -> bool:
     _register_coordinator_service(
-        hass, "bridge_reboot", 
-        lambda coord, _: hass.async_create_task(coord.do_reboot())
+        hass,
+        "bridge_reboot",
+        lambda coord, _: hass.async_create_task(coord.do_reboot()),
     )
     _register_coordinator_service(
-        hass, "bridge_fwupdate", 
-        lambda coord, _: hass.async_create_task(coord.do_fwupdate())
+        hass,
+        "bridge_fwupdate",
+        lambda coord, _: hass.async_create_task(coord.do_fwupdate()),
     )
     _register_coordinator_service(
-        hass, "bridge_delete_callback", 
-        lambda coord, data: hass.async_create_task(coord.do_delete_callback(data.get("callback")))
+        hass,
+        "bridge_delete_callback",
+        lambda coord, data: hass.async_create_task(
+            coord.do_delete_callback(data.get("callback"))
+        ),
     )
     _register_coordinator_service(
-        hass, "execute_action", 
-        lambda coord, data: hass.async_create_task(coord.action_for_devices(data.get("action")))
+        hass,
+        "execute_action",
+        lambda coord, data: hass.async_create_task(
+            coord.action_for_devices(data.get("action"))
+        ),
     )
 
     return True
 
 
+# ------------------------------------------------------
+#  Nuki Base Entities
+# ------------------------------------------------------
+
 class NukiEntity(CoordinatorEntity):
+    """Base entity for Nuki locks and openers."""
+
     def __init__(self, coordinator, device_id: str):
         super().__init__(coordinator)
         self.device_id = device_id
+
+    # ---- ID + Name helpers -------------------------------------
 
     def set_id(self, prefix: str, suffix: str):
         self.id_prefix = prefix
@@ -98,6 +117,8 @@ class NukiEntity(CoordinatorEntity):
     def unique_id(self) -> str:
         return "nuki-%s-%s" % (self.device_id, self.id_suffix)
 
+    # ---- Data Access --------------------------------------------
+
     @property
     def available(self):
         if "nukiId" not in self.data:
@@ -118,23 +139,43 @@ class NukiEntity(CoordinatorEntity):
             return "Nuki Smart Lock"
         if self.coordinator.is_opener(self.device_id):
             return "Nuki Opener"
+        return "Nuki Device"
+
+    # ---- FIXED device_info --------------------------------------
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {("id", self.device_id)},
+        """
+        Correct HA-compatible device definition.
+        Ensures:
+        - identifiers use (DOMAIN, id)
+        - via_device only set if bridge_id exists
+        """
+        # Bridge Hardware-ID (may be None)
+        bridge_id = self.coordinator.info_data().get("ids", {}).get("hardwareId")
+
+        info = {
+            "identifiers": {(DOMAIN, self.device_id)},
             "name": self.get_name,
             "manufacturer": "Nuki",
             "model": self.model,
             "sw_version": self.data.get("firmwareVersion"),
-            "via_device": (
-                "id",
-                self.coordinator.info_data().get("ids", {}).get("hardwareId"),
-            ),
         }
 
+        # Add bridging only when valid
+        if bridge_id:
+            info["via_device"] = (DOMAIN, bridge_id)
+
+        return info
+
+
+# ------------------------------------------------------
+#  Nuki Bridge Entity
+# ------------------------------------------------------
 
 class NukiBridge(CoordinatorEntity):
+    """Represents the Nuki Bridge device."""
+
     def set_id(self, suffix: str):
         self.id_suffix = suffix
 
@@ -159,12 +200,16 @@ class NukiBridge(CoordinatorEntity):
 
     @property
     def device_info(self):
+        """Correct HA-compliant Bridge info."""
         model = (
-            "Hardware Bridge" if self.data.get("bridgeType", 1) == 1 else "Software Bridge"
+            "Hardware Bridge"
+            if self.data.get("bridgeType", 1) == 1
+            else "Software Bridge"
         )
         versions = self.data.get("versions", {})
+
         return {
-            "identifiers": {("id", self.get_id)},
+            "identifiers": {(DOMAIN, self.get_id)},
             "name": "Nuki Bridge",
             "manufacturer": "Nuki",
             "model": model,
@@ -172,19 +217,30 @@ class NukiBridge(CoordinatorEntity):
         }
 
 
+# ------------------------------------------------------
+#  Advanced Opener Entity
+# ------------------------------------------------------
+
 class NukiOpenerRingSuppressionEntity(NukiEntity):
-    
+
     SUP_RING = 4
     SUP_RTO = 2
     SUP_CM = 1
-    
+
     @property
     def entity_category(self):
         return EntityCategory.CONFIG
-    
+
     @property
     def doorbellSuppression(self):
-        return self.coordinator.info_field(self.device_id, 0, "openerAdvancedConfig", "doorbellSuppression")
-    
+        return self.coordinator.info_field(
+            self.device_id, 0, "openerAdvancedConfig", "doorbellSuppression"
+        )
+
     async def update_doorbell_suppression(self, new_value):
-        await self.coordinator.update_config(self.device_id, "openerAdvancedConfig", dict(doorbellSuppression=new_value))
+        await self.coordinator.update_config(
+            self.device_id,
+            "openerAdvancedConfig",
+            dict(doorbellSuppression=new_value),
+        )
+
