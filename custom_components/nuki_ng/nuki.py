@@ -212,6 +212,7 @@ class NukiInterface:
             },
             3: lock_actions_map,
             4: lock_actions_map,
+            5: lock_actions_map,
         }
         device_actions_map[4] = device_actions_map[0]
         response = await self.web_async_json(
@@ -299,7 +300,7 @@ class NukiInterface:
         )
         result = dict()
         for item in resp:
-            if item.get("type") not in (0, 2, 4):
+            if item.get("type") not in (0, 3, 4, 5):
                 continue
             state = item.get("state", {})
             result[item.get("smartlockId")] = {
@@ -421,6 +422,8 @@ class NukiCoordinator(DataUpdateCoordinator):
                     as_hex = f"3{as_hex}"
                 elif deviceType == 4:
                     as_hex = f"4{as_hex}"
+                elif deviceType == 5:
+                    as_hex = f"5{as_hex}"
                 return int(as_hex, 16)
             if self.api.can_bridge():
                 try:
@@ -546,7 +549,7 @@ class NukiCoordinator(DataUpdateCoordinator):
         return self.data.get("info", {})
 
     def is_lock(self, dev_id: str) -> bool:
-        return self.device_data(dev_id).get("deviceType") in (0, 3, 4)
+        return self.device_data(dev_id).get("deviceType") in (0, 3, 4, 5)
 
     def is_opener(self, dev_id: str) -> bool:
         return self.device_data(dev_id).get("deviceType") == 2
