@@ -9,6 +9,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .nuki import NukiCoordinator
 from .constants import DOMAIN, PLATFORMS
+from .registry_migration import async_migrate_device_registry
 
 OPENER_TYPE = 1
 LOCK_TYPE = 0
@@ -24,12 +25,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     data = entry.as_dict()["data"]
     _LOGGER.debug(f"async_setup_entry: {data}")
 
+    # Convert devices still registered under the pre-0.5.x identifier domains
+    # before any platform re-creates them. No-op once converted.
+    await async_migrate_device_registry(hass, entry)
+
     coordinator = NukiCoordinator(hass, entry, data)
     entry.runtime_data = coordinator
 
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device
+) -> bool:
+    """Allow removing a device from the UI when it no longer has entities.
+
+    Without this, Home Assistant refuses every deletion with "Config entry does
+    not support device removal", which leaves users unable to clear out rows
+    left behind by earlier identifier schemes.
+    """
+    from homeassistant.helpers import entity_registry as er
+
+    remaining = er.async_entries_for_device(
+        er.async_get(hass), device.id, include_disabled_entities=True
+    )
+    if remaining:
+        _LOGGER.debug(
+            "Refusing to remove device %s: still has %d entities",
+            device.id,
+            len(remaining),
+        )
+        return False
     return True
 
 

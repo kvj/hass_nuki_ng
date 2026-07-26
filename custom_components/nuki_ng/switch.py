@@ -89,11 +89,14 @@ class AuthEntry(NukiEntity, SwitchEntity):
 
     @property
     def device_info(self):
+        # Same identifier domain as the lock and the bridge. The numeric id is
+        # shared with the lock, hence the prefix. Registrations from before
+        # this change are converted by registry_migration.
         return {
-            "identifiers": {("web_id", self.device_id)},
+            "identifiers": {(DOMAIN, f"web_{self.device_id}")},
             "name": "Nuki Web API",
             "manufacturer": "Nuki",
-            "via_device": ("id", self.device_id)
+            "via_device": (DOMAIN, self.device_id)
         }
 
     @property
