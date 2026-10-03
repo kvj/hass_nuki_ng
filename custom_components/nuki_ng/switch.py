@@ -93,7 +93,7 @@ class AuthEntry(NukiEntity, SwitchEntity):
             "identifiers": {("web_id", self.device_id)},
             "name": "Nuki Web API",
             "manufacturer": "Nuki",
-            "via_device": ("id", self.device_id)
+            "via_device": (DOMAIN, self.device_id)
         }
 
     @property
